@@ -1,5 +1,8 @@
+using Kioskitos.Application.Auth;
+using Kioskitos.Infrastructure.Auth;
 using Kioskitos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Kioskitos.Infrastructure;
@@ -8,8 +11,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        string? connectionString)
+        IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("Default");
+
         services.AddDbContext<AppDbContext>(options =>
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -20,6 +25,13 @@ public static class DependencyInjection
 
             options.UseNpgsql(connectionString);
         });
+
+        services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+        services.Configure<GoogleOptions>(configuration.GetSection("Google"));
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }
