@@ -87,6 +87,37 @@ dotnet ef migrations add <Name> \
   --startup-project src/Kioskitos.API \
   --output-dir Persistence/Migrations
 ```
+## Running the API locally
+Prerequisites: Docker Desktop running, .NET SDK from global.json, and a .env with Google__ClientId, Google__ClientSecret and a Jwt__Key of at least 32 characters (shorter keys make every request fail with 500).
+
+dotnet does not read .env, so load it into the shell first. Run everything from the repo root, in the same terminal (Windows cmd; on bash use set -a; source .env; set +a).
+
+docker compose up -d postgres
+for /f "usebackq eol=# tokens=1* delims==" %a in (".env") do set "%a=%~b"
+cd backend
+dotnet ef database update --project src/Kioskitos.Infrastructure --startup-project src/Kioskitos.API
+dotnet run --project src/Kioskitos.API
+The API listens on http://localhost:5076. Check GET /api/health returns {"status":"Healthy"}. Stop with Ctrl + C and docker compose stop.
+
+## Testing Google sign-in
+The backend only validates a Google ID token; get one from the OAuth 2.0 Playground:
+
+Gear icon → Use your own OAuth credentials → paste the Client ID and secret from .env. The OAuth client must list https://developers.google.com/oauthplayground as a redirect URI, and your account must be a test user.
+Step 1: scopes openid email profile → Authorize APIs.
+Step 2: Exchange authorization code for tokens → copy id_token (valid 1 hour).
+From a second cmd window:
+
+curl -X POST http://localhost:5076/api/auth/google -H "Content-Type: application/json" -d "{\"idToken\":\"<id_token>\"}"
+curl http://localhost:5076/api/auth/me -H "Authorization: Bearer <accessToken>"
+The first call returns an accessToken and isNewUser: true on first login (false afterwards). The second returns the user's userId, email and name; without the header it returns 401.
+
+Symptom	Likely cause
+failed to connect to the docker API	Docker Desktop is not running
+Configurá ConnectionStrings__Default	.env not loaded in this terminal
+500 on every request	Jwt__Key missing or shorter than 32 characters
+401 on /api/auth/google	Expired id_token, or issued for another Client ID
+redirect_uri_mismatch	Playground URI missing from the OAuth client
+
 
 ## Integration tests
 
