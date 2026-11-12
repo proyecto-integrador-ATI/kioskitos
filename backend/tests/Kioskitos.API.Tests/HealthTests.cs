@@ -7,8 +7,8 @@ using Xunit;
 namespace Kioskitos.API.Tests;
 
 public sealed class HealthTests(
-    WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+    KioskitosWebApplicationFactory factory)
+    : IClassFixture<KioskitosWebApplicationFactory>
 {
     [Fact]
     public async Task GetHealth_ReturnsOkAndHealthy()

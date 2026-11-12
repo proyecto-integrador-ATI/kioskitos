@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Kioskitos.API.Tests;
 
 public sealed class DatabaseTests(
-    WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+    KioskitosWebApplicationFactory factory)
+    : IClassFixture<KioskitosWebApplicationFactory>
 {
     [RequiresDatabaseFact]
     public async Task AppDbContext_CanConnectToDatabase()

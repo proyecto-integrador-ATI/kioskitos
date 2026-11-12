@@ -18,6 +18,26 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GoogleLoginService>();
 
 builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection("Jwt"))
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Key),
+        "Jwt:Key must be configured.")
+    .Validate(options => options.Key.Length >= 32,
+        "Jwt:Key must contain at least 32 characters.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Issuer),
+        "Jwt:Issuer must be configured.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Audience),
+        "Jwt:Audience must be configured.")
+    .ValidateOnStart();
+
+builder.Services
+    .AddOptions<GoogleOptions>()
+    .Bind(builder.Configuration.GetSection("Google"))
+    .Validate(options => !string.IsNullOrWhiteSpace(options.ClientId),
+        "Google:ClientId must be configured.")
+    .ValidateOnStart();
+
+builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer();
 
@@ -35,9 +55,14 @@ builder.Services
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            ValidateIssuer = true,
             ValidIssuer = jwt.Issuer,
+            ValidateAudience = true,
             ValidAudience = jwt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key))
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
     });
 
