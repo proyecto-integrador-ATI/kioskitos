@@ -11,8 +11,8 @@ using Xunit;
 namespace Kioskitos.API.Tests;
 
 public sealed class ExceptionHandlingTests(
-    WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+    KioskitosWebApplicationFactory factory)
+    : IClassFixture<KioskitosWebApplicationFactory>
 {
     [Fact]
     public async Task UnexpectedException_ReturnsGenericProblemDetails()
