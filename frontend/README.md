@@ -26,7 +26,7 @@ Copy [.env.example](./.env.example) to `.env.local` and configure the REST API
 URL:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_API_URL=http://localhost:5076
 ```
 
 The port and protocol must match the .NET backend configuration. The backend

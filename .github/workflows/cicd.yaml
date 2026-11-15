@@ -89,6 +89,9 @@ jobs:
 
       - name: Build
         working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ci-placeholder
         run: npm run build
 
   docker-build:
