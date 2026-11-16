@@ -22,6 +22,39 @@ namespace Kioskitos.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Kioskitos.Domain.Entities.GoogleCalendarConnection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CalendarId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("ConnectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EncryptedRefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GrantedScopes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("google_calendar_connections", (string)null);
+                });
+
             modelBuilder.Entity("Kioskitos.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -59,6 +92,34 @@ namespace Kioskitos.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DataProtectionKeys");
+                });
+
+            modelBuilder.Entity("Kioskitos.Domain.Entities.GoogleCalendarConnection", b =>
+                {
+                    b.HasOne("Kioskitos.Domain.Entities.User", null)
+                        .WithOne()
+                        .HasForeignKey("Kioskitos.Domain.Entities.GoogleCalendarConnection", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
