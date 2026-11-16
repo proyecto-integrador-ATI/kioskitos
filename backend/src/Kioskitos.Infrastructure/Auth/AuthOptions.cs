@@ -11,4 +11,5 @@ public sealed class JwtOptions
 public sealed class GoogleOptions
 {
     public string ClientId { get; set; } = "";
+    public string ClientSecret { get; set; } = "";
 }

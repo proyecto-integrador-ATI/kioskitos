@@ -16,6 +16,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GoogleLoginService>();
+builder.Services.AddScoped<ConnectGoogleCalendarService>();
 
 builder.Services
     .AddOptions<JwtOptions>()
@@ -35,7 +36,10 @@ builder.Services
     .Bind(builder.Configuration.GetSection("Google"))
     .Validate(options => !string.IsNullOrWhiteSpace(options.ClientId),
         "Google:ClientId must be configured.")
+        .Validate(options => !string.IsNullOrWhiteSpace(options.ClientSecret),
+        "Google:ClientSecret must be configured.")
     .ValidateOnStart();
+
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
