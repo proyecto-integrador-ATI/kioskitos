@@ -24,6 +24,7 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ASPNETCORE_HTTP_PORTS: 8080
       Google__ClientId: ${Google__ClientId}
+      Google__ClientSecret: ${Google__ClientSecret}
       Jwt__Key: ${Jwt__Key}
       Jwt__Issuer: ${Jwt__Issuer}
       Jwt__Audience: ${Jwt__Audience}
