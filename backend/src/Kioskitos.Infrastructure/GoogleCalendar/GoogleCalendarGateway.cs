@@ -12,10 +12,10 @@ namespace Kioskitos.Infrastructure.GoogleCalendar;
 
 public sealed class GoogleCalendarGateway(IOptions<GoogleOptions> options) : IGoogleCalendarGateway
 {
-    // Con Google Identity Services en modo popup, el redirect_uri del intercambio es "postmessage".
+    // With Google Identity Services in popup mode, the redirect_uri for the exchange is "postmessage".
     private const string PopupRedirectUri = "postmessage";
 
-    // La librería pide un identificador de usuario para su almacén de tokens; acá no se guarda nada.
+    // The library requires a user identifier for its token store; nothing is stored here.
     private const string FlowUserId = "kioskitos";
 
     private const string TimeZone = "America/Montevideo";

@@ -14,7 +14,7 @@ public sealed class GoogleCalendarConnectionConfiguration
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).ValueGeneratedNever();
 
-        // Uno a uno con User: crea un índice único en UserId y borra la conexión si se borra el usuario.
+        // One-to-one with User: creates a unique index on UserId and deletes the connection when the user is deleted.
         builder.HasOne<User>()
             .WithOne()
             .HasForeignKey<GoogleCalendarConnection>(c => c.UserId)

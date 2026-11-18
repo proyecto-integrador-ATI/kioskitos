@@ -4,7 +4,7 @@ namespace Kioskitos.Application.GoogleCalendar;
 
 public static class GoogleCalendarScopes
 {
-    // Solo permite crear calendarios secundarios y manejar los que creó la app (mínimo privilegio).
+    // Only allows creating secondary calendars and managing the ones the app created (least privilege).
     public const string AppCreated = "https://www.googleapis.com/auth/calendar.app.created";
 }
 
@@ -12,10 +12,10 @@ public sealed record GoogleTokenResult(string? RefreshToken, IReadOnlyCollection
 
 public interface IGoogleCalendarGateway
 {
-    /// <summary>Cambia el authorization code por tokens. Devuelve null si el code es inválido.</summary>
+    /// <summary>Exchanges the authorization code for tokens. Returns null if the code is invalid.</summary>
     Task<GoogleTokenResult?> ExchangeCodeAsync(string code, CancellationToken ct);
 
-    /// <summary>Crea un calendario secundario y devuelve su id.</summary>
+    /// <summary>Creates a secondary calendar and returns its id.</summary>
     Task<string> CreateCalendarAsync(string refreshToken, string name, CancellationToken ct);
 }
 

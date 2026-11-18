@@ -16,7 +16,7 @@ public sealed class ExceptionHandlingMiddleware(
         {
             logger.LogError(
                 exception,
-                "Error inesperado. TraceId: {TraceId}",
+                "Unexpected error. TraceId: {TraceId}",
                 context.TraceIdentifier);
 
             context.Response.Clear();

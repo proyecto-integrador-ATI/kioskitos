@@ -29,13 +29,13 @@ public sealed class GoogleCalendarController(ConnectGoogleCalendarService connec
         {
             ConnectGoogleCalendarError.MissingCalendarScope => CalendarProblem(
                 "missing_calendar_scope",
-                "Para crear el calendario Kioskitos tenés que aceptar el permiso de Google Calendar."),
+                "The Google Calendar permission is required to create the Kioskitos calendar."),
             ConnectGoogleCalendarError.MissingRefreshToken => CalendarProblem(
                 "missing_refresh_token",
-                "Google no devolvió el permiso de acceso. Quitá Kioskitos de los accesos de tu cuenta de Google y volvé a intentarlo."),
+                "Google did not return a refresh token. Remove Kioskitos from your Google account access and try again."),
             _ => CalendarProblem(
                 "invalid_code",
-                "No pudimos validar la autorización de Google. Volvé a intentarlo.")
+                "The Google authorization code is invalid or expired. Please try again.")
         };
     }
 
@@ -44,7 +44,7 @@ public sealed class GoogleCalendarController(ConnectGoogleCalendarService connec
         var problem = new ProblemDetails
         {
             Status = StatusCodes.Status400BadRequest,
-            Title = "No se pudo conectar Google Calendar",
+            Title = "Could not connect Google Calendar",
             Detail = detail,
             Instance = HttpContext.Request.Path
         };

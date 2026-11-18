@@ -46,7 +46,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer();
 
-// Se configura de forma diferida, así no rompe dotnet ef ni los tests si falta Jwt__Key.
+// Configured lazily so that dotnet ef and the tests do not fail when Jwt__Key is missing.
 builder.Services
     .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<IOptions<JwtOptions>>((options, jwtOptions) =>
@@ -54,7 +54,7 @@ builder.Services
         var jwt = jwtOptions.Value;
         if (string.IsNullOrWhiteSpace(jwt.Key))
         {
-            throw new InvalidOperationException("Configurá Jwt__Key.");
+            throw new InvalidOperationException("Jwt__Key must be configured.");
         }
 
         options.MapInboundClaims = false;

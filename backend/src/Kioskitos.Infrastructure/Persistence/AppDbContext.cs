@@ -11,7 +11,7 @@ public sealed class AppDbContext(
     public DbSet<User> Users => Set<User>();
     public DbSet<GoogleCalendarConnection> GoogleCalendarConnections => Set<GoogleCalendarConnection>();
 
-    // Claves de Data Protection: tienen que persistir para poder desencriptar los refresh tokens.
+    // Data Protection keys: they must be persisted to be able to decrypt the refresh tokens.
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

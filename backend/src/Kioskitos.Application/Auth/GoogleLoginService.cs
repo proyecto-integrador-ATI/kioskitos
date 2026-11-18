@@ -21,7 +21,7 @@ public sealed class GoogleLoginService(
         var user = await users.GetByGoogleSubjectAsync(googleUser.Subject, ct);
         var isNewUser = user is null;
 
-        if (user is null) // RF 01.04: registro automático
+        if (user is null) // RF 01.04: automatic registration
         {
             user = new User(googleUser.Subject, googleUser.Email, googleUser.Name);
             await users.AddAsync(user, ct);

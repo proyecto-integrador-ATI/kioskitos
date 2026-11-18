@@ -23,7 +23,7 @@ public static class DependencyInjection
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new InvalidOperationException(
-                    "Configurá ConnectionStrings__Default.");
+                    "ConnectionStrings__Default must be configured.");
             }
 
             options.UseNpgsql(connectionString);

@@ -33,7 +33,7 @@ public sealed class ConnectGoogleCalendarService(
             return ConnectGoogleCalendarResult.Failure(ConnectGoogleCalendarError.InvalidCode);
         }
 
-        // Google permite aceptar solo algunos permisos: hay que verificar que esté el de Calendar.
+        // Google lets users grant only some permissions: check that the Calendar one was granted.
         if (!tokens.GrantedScopes.Contains(GoogleCalendarScopes.AppCreated))
         {
             return ConnectGoogleCalendarResult.Failure(ConnectGoogleCalendarError.MissingCalendarScope);
@@ -42,10 +42,10 @@ public sealed class ConnectGoogleCalendarService(
         var grantedScopes = string.Join(' ', tokens.GrantedScopes);
         var existing = await connections.GetByUserIdAsync(userId, ct);
 
-        // Ya conectado: no se crea un segundo calendario "Kioskitos".
+        // Already connected: do not create a second "Kioskitos" calendar.
         if (existing is not null)
         {
-            // Google solo manda refresh token la primera vez que se da el consentimiento.
+            // Google only sends a refresh token the first time consent is given.
             if (!string.IsNullOrWhiteSpace(tokens.RefreshToken))
             {
                 existing.UpdateCredentials(tokenProtector.Protect(tokens.RefreshToken), grantedScopes);
@@ -60,7 +60,7 @@ public sealed class ConnectGoogleCalendarService(
             return ConnectGoogleCalendarResult.Failure(ConnectGoogleCalendarError.MissingRefreshToken);
         }
 
-        // RF 03.01: crear el calendario secundario "Kioskitos".
+        // RF 03.01: create the secondary "Kioskitos" calendar.
         var calendarId = await google.CreateCalendarAsync(tokens.RefreshToken, CalendarName, ct);
 
         var connection = new GoogleCalendarConnection(

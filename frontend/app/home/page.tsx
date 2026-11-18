@@ -20,7 +20,7 @@ export default function HomePage() {
     apiFetch<Me>("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
       .then(setMe)
       .catch(() => {
-        clearToken(); // token vencido o inválido
+        clearToken(); // expired or invalid token
         router.replace("/login");
       });
   }, [router]);
