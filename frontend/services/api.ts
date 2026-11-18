@@ -6,6 +6,10 @@ if (!configuredApiUrl) {
 
 const API_URL = configuredApiUrl;
 
+import { ApiError, type ProblemDetails } from "./apiError";
+
+export { ApiError, type ProblemDetails };
+
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
@@ -22,9 +26,8 @@ export async function apiFetch<T>(
   );
 
   if (!response.ok) {
-    throw new Error(
-      `The API responded with the HTTP status ${response.status}.`,
-    );
+    const problem = (await response.json().catch(() => null)) as ProblemDetails | null;
+    throw new ApiError(response.status, problem);
   }
 
   if (response.status === 204) {
