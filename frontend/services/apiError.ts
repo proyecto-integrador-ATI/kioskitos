@@ -1,4 +1,4 @@
-/** Cuerpo ProblemDetails que devuelve el backend ante errores. */
+/** ProblemDetails body returned by the backend on errors. */
 export type ProblemDetails = {
   title?: string;
   detail?: string;
