@@ -4,6 +4,9 @@ using Kioskitos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Kioskitos.Application.GoogleCalendar;
+using Kioskitos.Infrastructure.GoogleCalendar;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace Kioskitos.Infrastructure;
 
@@ -20,7 +23,7 @@ public static class DependencyInjection
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new InvalidOperationException(
-                    "Configurá ConnectionStrings__Default.");
+                    "ConnectionStrings__Default must be configured.");
             }
 
             options.UseNpgsql(connectionString);
@@ -32,6 +35,14 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        services.AddDataProtection()
+    .SetApplicationName("Kioskitos")
+    .PersistKeysToDbContext<AppDbContext>();
+
+        services.AddScoped<IGoogleCalendarConnectionRepository, GoogleCalendarConnectionRepository>();
+        services.AddSingleton<ITokenProtector, DataProtectionTokenProtector>();
+        services.AddSingleton<IGoogleCalendarGateway, GoogleCalendarGateway>();
 
         return services;
     }
