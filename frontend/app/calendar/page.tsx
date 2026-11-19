@@ -55,6 +55,9 @@ function ConnectCalendar() {
   const login = useGoogleLogin({
     flow: "auth-code",
     scope: CALENDAR_SCOPE,
+    // GIS sends include_granted_scopes=true by default. While the app is unverified, Google
+    // drops the request parameters after the "unverified app" warning (400 "missing response_type").
+    include_granted_scopes: false,
     onSuccess: (r) => connect(r.code),
     onError: (r) =>
       setStatus({ kind: "error", message: "Google rechazó la autorización.", errorCode: r.error }),

@@ -10,6 +10,7 @@ const ME = { userId: "1", email: "ana@example.com", name: "Ana" };
 const replace = vi.fn();
 const router = { replace }; // stable reference, like Next's real router
 const apiFetch = vi.fn();
+const googleLoginConfig = vi.fn();
 
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("../../services/api", () => ({
@@ -18,10 +19,10 @@ vi.mock("../../services/api", () => ({
 vi.mock("@react-oauth/google", () => ({
   GoogleOAuthProvider: ({ children }: { children: ReactNode }) => children,
   // Simulates Google returning an authorization code on click.
-  useGoogleLogin:
-    ({ onSuccess }: { onSuccess: (r: { code: string }) => void }) =>
-    () =>
-      onSuccess({ code: "google-code" }),
+  useGoogleLogin: (config: { onSuccess: (r: { code: string }) => void }) => {
+    googleLoginConfig(config);
+    return () => config.onSuccess({ code: "google-code" });
+  },
 }));
 
 describe("CalendarPage", () => {
@@ -53,6 +54,9 @@ describe("CalendarPage", () => {
       }),
     );
     expect(await screen.findByRole("status")).toHaveTextContent("abc@group.calendar.google.com");
+    expect(googleLoginConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ flow: "auth-code", include_granted_scopes: false }),
+    );
   });
 
   it("shows a friendly message for a backend error code", async () => {
