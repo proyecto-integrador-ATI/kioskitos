@@ -53,7 +53,7 @@ npm start
 `npm run test:coverage` generates the `coverage/lcov.info` report, which can be
 used by analysis tools such as SonarQube.
 
-## Estructura
+## Structure
 
 ```text
 frontend/

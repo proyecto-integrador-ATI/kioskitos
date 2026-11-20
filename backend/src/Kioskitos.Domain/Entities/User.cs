@@ -21,4 +21,26 @@ public sealed class User
         Name = name;
         CreatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Updates the editable profile fields. Identity and audit data
+    /// (Id, GoogleSubject, Email, CreatedAt) are never modified here.
+    /// </summary>
+    public void UpdateProfile(string name, string? industry, decimal? hourlyRate)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Name is required.", nameof(name));
+        }
+
+        if (hourlyRate < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(hourlyRate), hourlyRate, "Hourly rate must be greater than or equal to zero.");
+        }
+
+        Name = name.Trim();
+        Industry = string.IsNullOrWhiteSpace(industry) ? null : industry.Trim();
+        HourlyRate = hourlyRate;
+    }
 }

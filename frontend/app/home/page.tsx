@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { apiFetch } from "../../services/api";
 import { clearToken, getToken } from "../../services/auth";
-
-type Me = { userId: string; email: string; name: string };
+import { getMyProfile, type UserProfile } from "../../services/users";
 
 export default function HomePage() {
   const router = useRouter();
-  const [me, setMe] = useState<Me | null>(null);
+  const [me, setMe] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -18,7 +16,7 @@ export default function HomePage() {
       router.replace("/login");
       return;
     }
-    apiFetch<Me>("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+    getMyProfile()
       .then(setMe)
       .catch(() => {
         clearToken(); // expired or invalid token
@@ -28,7 +26,7 @@ export default function HomePage() {
 
   function logout() {
     clearToken();
-    router.replace("/login");
+    window.location.replace("/login");
   }
 
   if (!me) return <p className="p-8 text-slate-600">Cargando…</p>;
@@ -37,6 +35,12 @@ export default function HomePage() {
     <main className="mx-auto w-full max-w-3xl p-8">
       <h1 className="text-2xl font-bold">Hola, {me.name}</h1>
       <p className="mt-2 text-slate-600">{me.email}</p>
+      <Link
+        href="/profile"
+        className="mt-6 block w-fit rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+      >
+        Mi perfil
+      </Link>
       <Link
         href="/calendar"
         className="mt-6 block w-fit rounded-md bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-700"
