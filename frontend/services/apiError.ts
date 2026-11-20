@@ -4,6 +4,8 @@ export type ProblemDetails = {
   detail?: string;
   status?: number;
   errorCode?: string;
+  /** Per-field validation errors (ValidationProblemDetails), e.g. { Name: ["..."] }. */
+  errors?: Record<string, string[]>;
 };
 
 export class ApiError extends Error {
