@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Kioskitos.Application.Auth;
+using Kioskitos.Application.Users;
 using Kioskitos.Domain.Entities;
 using Kioskitos.Infrastructure.Auth;
 using Microsoft.Extensions.Options;
@@ -188,6 +189,9 @@ public sealed class AuthenticationTests
         : IUserRepository
     {
         public List<User> AddedUsers { get; } = [];
+
+        public Task<User?> GetByIdAsync(Guid id, CancellationToken ct) =>
+            Task.FromResult(existingUser?.Id == id ? existingUser : null);
 
         public Task<User?> GetByGoogleSubjectAsync(
             string googleSubject,
