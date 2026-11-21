@@ -1,9 +1,11 @@
-/** Cuerpo ProblemDetails que devuelve el backend ante errores. */
+/** ProblemDetails body returned by the backend on errors. */
 export type ProblemDetails = {
   title?: string;
   detail?: string;
   status?: number;
   errorCode?: string;
+  /** Per-field validation errors (ValidationProblemDetails), e.g. { Name: ["..."] }. */
+  errors?: Record<string, string[]>;
 };
 
 export class ApiError extends Error {
