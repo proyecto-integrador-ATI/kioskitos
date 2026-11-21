@@ -9,10 +9,15 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Kioskitos.Application.GoogleCalendar;
 using Kioskitos.Application.Clients;
+using Kioskitos.Application.Projects;
+using Kioskitos.Application.Tags;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    // Enums travel as text in the JSON ("InProgress" instead of 1).
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
@@ -20,6 +25,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GoogleLoginService>();
 builder.Services.AddScoped<ConnectGoogleCalendarService>();
 builder.Services.AddScoped<RegisterClientService>();
+builder.Services.AddScoped<CreateProjectService>();
+builder.Services.AddScoped<ProjectQueryService>();
+builder.Services.AddScoped<TagService>();
 
 builder.Services
     .AddOptions<JwtOptions>()

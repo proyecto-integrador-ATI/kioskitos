@@ -14,6 +14,12 @@ public sealed class AppDbContext(
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<ClientContact> ClientContacts => Set<ClientContact>();
 
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<Stage> Stages => Set<Stage>();
+    public DbSet<StageName> StageNames => Set<StageName>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<ProjectTag> ProjectTags => Set<ProjectTag>();
+
     // Data Protection keys: they must be persisted to be able to decrypt the refresh tokens.
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
