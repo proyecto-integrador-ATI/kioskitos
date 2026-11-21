@@ -22,6 +22,67 @@ namespace Kioskitos.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Kioskitos.Domain.Entities.Client", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Industry")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("clients", (string)null);
+                });
+
+            modelBuilder.Entity("Kioskitos.Domain.Entities.ClientContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("client_contacts", (string)null);
+                });
+
             modelBuilder.Entity("Kioskitos.Domain.Entities.GoogleCalendarConnection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -113,6 +174,24 @@ namespace Kioskitos.Infrastructure.Persistence.Migrations
                     b.ToTable("DataProtectionKeys");
                 });
 
+            modelBuilder.Entity("Kioskitos.Domain.Entities.Client", b =>
+                {
+                    b.HasOne("Kioskitos.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Kioskitos.Domain.Entities.ClientContact", b =>
+                {
+                    b.HasOne("Kioskitos.Domain.Entities.Client", null)
+                        .WithMany("Contacts")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Kioskitos.Domain.Entities.GoogleCalendarConnection", b =>
                 {
                     b.HasOne("Kioskitos.Domain.Entities.User", null)
@@ -120,6 +199,11 @@ namespace Kioskitos.Infrastructure.Persistence.Migrations
                         .HasForeignKey("Kioskitos.Domain.Entities.GoogleCalendarConnection", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Kioskitos.Domain.Entities.Client", b =>
+                {
+                    b.Navigation("Contacts");
                 });
 #pragma warning restore 612, 618
         }
