@@ -8,8 +8,51 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-cream: #fffdf1;
+  --color-red: #ff2737;
+  --color-ash: #eef5ff;
+  --color-green: #276651;
+  --color-blue: #0084ef;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* Estilos de texto de Figma. En pantallas chicas header1, header2 y special-header se reducen. */
+@utility text-header1 {
+  font-family: var(--font-boldonse);
+  font-size: 32px;
+  @media (min-width: 48rem) {
+    font-size: 48px;
+  }
+}
+
+@utility text-header2 {
+  font-family: var(--font-boldonse);
+  font-size: 22px;
+  @media (min-width: 48rem) {
+    font-size: 30px;
+  }
+}
+
+@utility text-special-header {
+  font-family: var(--font-bitcount);
+  font-variation-settings: "CRSV" 0, "ELSH" 0, "ELXP" 0;
+  font-size: 28px;
+  @media (min-width: 48rem) {
+    font-size: 38px;
+  }
+}
+
+@utility text-normal {
+  font-family: var(--font-inter);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+@utility text-small {
+  font-family: var(--font-inter);
+  font-size: 14px;
+  font-weight: 300;
 }
 
 @media (prefers-color-scheme: dark) {
