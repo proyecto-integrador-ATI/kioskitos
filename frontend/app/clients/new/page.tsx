@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { AppHeader } from "../../../components/AppHeader";
@@ -59,8 +59,33 @@ const inputClass =
 const labelClass = "text-small font-medium text-green";
 const errorClass = "mt-1 text-small text-red";
 
+const noSubscribe = () => () => {};
+
 export default function NewClientPage() {
   const router = useRouter();
+  const isClient = useSyncExternalStore(noSubscribe, () => true, () => false);
+
+  useEffect(() => {
+    if (!getToken()) router.replace("/login");
+  }, [router]);
+
+  return (
+    <div className="flex min-h-screen flex-1 flex-col bg-ash">
+      <AppHeader />
+
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
+        <Link href="/home" className="text-small text-green hover:underline">
+          ← Volver al inicio
+        </Link>
+        <h1 className="mt-4 text-header2 text-green">Registrar cliente</h1>
+        {/* useFieldArray creates random ids, so the form must not be prerendered. */}
+        {isClient && getToken() !== null && <ClientForm />}
+      </main>
+    </div>
+  );
+}
+
+function ClientForm() {
   const [result, setResult] = useState<Result>(null);
 
   const {
@@ -74,10 +99,6 @@ export default function NewClientPage() {
     defaultValues: EMPTY_FORM,
   });
   const contacts = useFieldArray({ control, name: "contacts" });
-
-  useEffect(() => {
-    if (!getToken()) router.replace("/login");
-  }, [router]);
 
   // cacheComponents hides the page instead of unmounting it.
   useLayoutEffect(() => () => setResult(null), []);
@@ -100,112 +121,101 @@ export default function NewClientPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-1 flex-col bg-ash">
-      <AppHeader />
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onChange={() => setResult(null)}
+      noValidate
+      className="mt-8 flex flex-col gap-6"
+    >
+      <fieldset className="flex flex-col gap-4 rounded-[20px] border border-green bg-cream p-6">
+        <legend className="px-2 text-normal font-bold text-green">Datos del cliente</legend>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-        <Link href="/home" className="text-small text-green hover:underline">
-          ← Volver al inicio
-        </Link>
-        <h1 className="mt-4 text-header2 text-green">Registrar cliente</h1>
+        <div>
+          <label htmlFor="name" className={labelClass}>Nombre *</label>
+          <input id="name" className={inputClass} aria-invalid={!!errors.name} {...register("name")} />
+          {errors.name && <p className={errorClass}>{errors.name.message}</p>}
+        </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          onChange={() => setResult(null)}
-          noValidate
-          className="mt-8 flex flex-col gap-6"
-        >
-          <fieldset className="flex flex-col gap-4 rounded-[20px] border border-green bg-cream p-6">
-            <legend className="px-2 text-normal font-bold text-green">Datos del cliente</legend>
+        <div>
+          <label htmlFor="industry" className={labelClass}>Rubro</label>
+          <input id="industry" className={inputClass} aria-invalid={!!errors.industry} {...register("industry")} />
+          {errors.industry && <p className={errorClass}>{errors.industry.message}</p>}
+        </div>
 
-            <div>
-              <label htmlFor="name" className={labelClass}>Nombre *</label>
-              <input id="name" className={inputClass} aria-invalid={!!errors.name} {...register("name")} />
-              {errors.name && <p className={errorClass}>{errors.name.message}</p>}
-            </div>
+        <div>
+          <label htmlFor="notes" className={labelClass}>Notas</label>
+          <textarea id="notes" rows={3} className={inputClass} aria-invalid={!!errors.notes} {...register("notes")} />
+          {errors.notes && <p className={errorClass}>{errors.notes.message}</p>}
+        </div>
+      </fieldset>
 
-            <div>
-              <label htmlFor="industry" className={labelClass}>Rubro</label>
-              <input id="industry" className={inputClass} aria-invalid={!!errors.industry} {...register("industry")} />
-              {errors.industry && <p className={errorClass}>{errors.industry.message}</p>}
-            </div>
+      <fieldset className="flex flex-col gap-4 rounded-[20px] border border-green bg-cream p-6">
+        <legend className="px-2 text-normal font-bold text-green">Personas de contacto</legend>
 
-            <div>
-              <label htmlFor="notes" className={labelClass}>Notas</label>
-              <textarea id="notes" rows={3} className={inputClass} aria-invalid={!!errors.notes} {...register("notes")} />
-              {errors.notes && <p className={errorClass}>{errors.notes.message}</p>}
-            </div>
-          </fieldset>
-
-          <fieldset className="flex flex-col gap-4 rounded-[20px] border border-green bg-cream p-6">
-            <legend className="px-2 text-normal font-bold text-green">Personas de contacto</legend>
-
-            {contacts.fields.map((field, i) => {
-              const e = errors.contacts?.[i];
-              return (
-                <div key={field.id} className="flex flex-col gap-3 border-b border-green/30 pb-4 last:border-b-0 last:pb-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-small font-bold text-green">Contacto {i + 1}</p>
-                    {contacts.fields.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => contacts.remove(i)}
-                        className="text-small text-red hover:underline"
-                      >
-                        Quitar
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <div>
-                      <label htmlFor={`contact-${i}-name`} className={labelClass}>Nombre *</label>
-                      <input id={`contact-${i}-name`} className={inputClass} aria-invalid={!!e?.name} {...register(`contacts.${i}.name`)} />
-                      {e?.name && <p className={errorClass}>{e.name.message}</p>}
-                    </div>
-                    <div>
-                      <label htmlFor={`contact-${i}-email`} className={labelClass}>Email *</label>
-                      <input id={`contact-${i}-email`} type="email" className={inputClass} aria-invalid={!!e?.email} {...register(`contacts.${i}.email`)} />
-                      {e?.email && <p className={errorClass}>{e.email.message}</p>}
-                    </div>
-                    <div>
-                      <label htmlFor={`contact-${i}-phone`} className={labelClass}>Teléfono *</label>
-                      <input id={`contact-${i}-phone`} type="tel" className={inputClass} aria-invalid={!!e?.phone} {...register(`contacts.${i}.phone`)} />
-                      {e?.phone && <p className={errorClass}>{e.phone.message}</p>}
-                    </div>
-                  </div>
+        {contacts.fields.map((field, i) => {
+          const e = errors.contacts?.[i];
+          return (
+            <div key={field.id} className="flex flex-col gap-3 border-b border-green/30 pb-4 last:border-b-0 last:pb-0">
+              <div className="flex items-center justify-between">
+                <p className="text-small font-bold text-green">Contacto {i + 1}</p>
+                {contacts.fields.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => contacts.remove(i)}
+                    className="text-small text-red hover:underline"
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <label htmlFor={`contact-${i}-name`} className={labelClass}>Nombre *</label>
+                  <input id={`contact-${i}-name`} className={inputClass} aria-invalid={!!e?.name} {...register(`contacts.${i}.name`)} />
+                  {e?.name && <p className={errorClass}>{e.name.message}</p>}
                 </div>
-              );
-            })}
+                <div>
+                  <label htmlFor={`contact-${i}-email`} className={labelClass}>Email *</label>
+                  <input id={`contact-${i}-email`} type="email" className={inputClass} aria-invalid={!!e?.email} {...register(`contacts.${i}.email`)} />
+                  {e?.email && <p className={errorClass}>{e.email.message}</p>}
+                </div>
+                <div>
+                  <label htmlFor={`contact-${i}-phone`} className={labelClass}>Teléfono *</label>
+                  <input id={`contact-${i}-phone`} type="tel" className={inputClass} aria-invalid={!!e?.phone} {...register(`contacts.${i}.phone`)} />
+                  {e?.phone && <p className={errorClass}>{e.phone.message}</p>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
 
-            <button
-              type="button"
-              onClick={() => contacts.append(EMPTY_CONTACT)}
-              className="w-fit rounded-full border border-green px-4 py-2 text-small font-medium text-green hover:bg-white"
-            >
-              + Agregar contacto
-            </button>
-          </fieldset>
+        <button
+          type="button"
+          onClick={() => contacts.append(EMPTY_CONTACT)}
+          className="w-fit rounded-full border border-green px-4 py-2 text-small font-medium text-green hover:bg-white"
+        >
+          + Agregar contacto
+        </button>
+      </fieldset>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-fit rounded-full bg-green px-6 py-3 text-normal text-cream hover:opacity-90 disabled:opacity-50"
-          >
-            {isSubmitting ? "Registrando…" : "Registrar cliente"}
-          </button>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-fit rounded-full bg-green px-6 py-3 text-normal text-cream hover:opacity-90 disabled:opacity-50"
+      >
+        {isSubmitting ? "Registrando…" : "Registrar cliente"}
+      </button>
 
-          {result?.kind === "success" && (
-            <p role="status" className="rounded-[10px] border border-green bg-white p-3 text-normal text-green">
-              Registramos a {result.name}.
-            </p>
-          )}
-          {result?.kind === "error" && (
-            <p role="alert" className="rounded-[10px] border border-red bg-white p-3 text-normal text-red">
-              {result.message}
-            </p>
-          )}
-        </form>
-      </main>
-    </div>
+      {result?.kind === "success" && (
+        <p role="status" className="rounded-[10px] border border-green bg-white p-3 text-normal text-green">
+          Registramos a {result.name}.
+        </p>
+      )}
+      {result?.kind === "error" && (
+        <p role="alert" className="rounded-[10px] border border-red bg-white p-3 text-normal text-red">
+          {result.message}
+        </p>
+      )}
+    </form>
   );
 }
