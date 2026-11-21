@@ -66,4 +66,29 @@ public sealed class ClientTests
         Assert.Throws<ArgumentException>(() => client.AddContact(name, email, phone));
         Assert.Empty(client.Contacts);
     }
+
+    [Theory]
+    [InlineData("ss")]
+    [InlineData("099-abc-456")]
+    [InlineData("1234567")]
+    [InlineData("++598 99 123 456")]
+    [InlineData("1234567890123456")]
+    public void AddContact_WithInvalidPhone_Throws(string phone)
+    {
+        var client = new Client(UserId, "Estudio Sur", null, null);
+
+        Assert.Throws<ArgumentException>(() => client.AddContact("Ana", "ana@estudiosur.com", phone));
+        Assert.Empty(client.Contacts);
+    }
+
+    [Theory]
+    [InlineData("12345678")]
+    [InlineData("099 123 456")]
+    [InlineData("2123-4567")]
+    [InlineData("+598 (2) 123 4567")]
+    [InlineData("123456789012345")]
+    public void IsValidPhone_AcceptsCommonFormats(string phone)
+    {
+        Assert.True(ClientContact.IsValidPhone(phone));
+    }
 }

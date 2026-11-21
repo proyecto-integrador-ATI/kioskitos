@@ -35,7 +35,7 @@ public sealed class ClientsController(RegisterClientService registerService) : C
             {
                 Status = StatusCodes.Status400BadRequest,
                 Title = "Could not register the client",
-                Detail = "The client name and at least one complete contact person are required.",
+                Detail = "The client name and at least one complete contact person with a valid phone are required.",
                 Instance = HttpContext.Request.Path
             };
             problem.Extensions["errorCode"] = "invalid_data";

@@ -70,6 +70,21 @@ public sealed class RegisterClientServiceTests
         Assert.Empty(repository.Added);
     }
 
+    [Fact]
+    public async Task Register_WithInvalidPhone_ReturnsInvalidDataAndSavesNothing()
+    {
+        var repository = new FakeClientRepository();
+        var service = new RegisterClientService(repository);
+        var command = new RegisterClientCommand(
+            "Estudio Sur", null, null, [new ClientContactData("Ana", "ana@estudiosur.com", "ss")]);
+
+        var result = await service.RegisterAsync(UserId, command, CancellationToken.None);
+
+        Assert.Equal(RegisterClientError.InvalidData, result.Error);
+        Assert.Empty(repository.Added);
+        Assert.False(repository.Saved);
+    }
+
     private sealed class FakeClientRepository : IClientRepository
     {
         public List<Client> Added { get; } = [];

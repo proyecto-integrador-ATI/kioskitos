@@ -36,6 +36,19 @@ describe("LoginPage", () => {
     expect(replace).toHaveBeenCalledWith("/home");
   });
 
+  it("goes straight to home when a token is already saved", () => {
+    localStorage.setItem("kioskitos_token", "jwt");
+    render(<LoginPage />);
+
+    expect(replace).toHaveBeenCalledWith("/home");
+  });
+
+  it("stays on login when there is no token", () => {
+    render(<LoginPage />);
+
+    expect(replace).not.toHaveBeenCalled();
+  });
+
   it("shows an error when the backend rejects the login", async () => {
     apiFetch.mockRejectedValue(new Error("401"));
     render(<LoginPage />);
