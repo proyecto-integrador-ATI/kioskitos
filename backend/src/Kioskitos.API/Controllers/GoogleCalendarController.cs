@@ -1,3 +1,4 @@
+using Kioskitos.API.Auth;
 using Kioskitos.API.Contracts;
 using Kioskitos.Application.GoogleCalendar;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +14,7 @@ public sealed class GoogleCalendarController(ConnectGoogleCalendarService connec
     [HttpPost("connect")]
     public async Task<IActionResult> Connect(ConnectGoogleCalendarRequest request, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirst("sub")?.Value, out var userId))
+        if (User.GetUserId() is not { } userId)
         {
             return Unauthorized();
         }

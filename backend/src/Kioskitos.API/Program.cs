@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Kioskitos.Application.GoogleCalendar;
 using Kioskitos.Application.Clients;
+using Kioskitos.Application.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GoogleLoginService>();
 builder.Services.AddScoped<ConnectGoogleCalendarService>();
 builder.Services.AddScoped<RegisterClientService>();
+builder.Services.AddScoped<UserProfileService>();
 
 builder.Services
     .AddOptions<JwtOptions>()
