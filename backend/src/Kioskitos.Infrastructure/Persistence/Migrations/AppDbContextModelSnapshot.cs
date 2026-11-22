@@ -208,6 +208,9 @@ namespace Kioskitos.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsGeneric")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
@@ -395,10 +398,12 @@ namespace Kioskitos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Kioskitos.Domain.Entities.StageName", null)
+                    b.HasOne("Kioskitos.Domain.Entities.StageName", "StageName")
                         .WithMany()
                         .HasForeignKey("StageNameId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("StageName");
                 });
 
             modelBuilder.Entity("Kioskitos.Domain.Entities.StageName", b =>

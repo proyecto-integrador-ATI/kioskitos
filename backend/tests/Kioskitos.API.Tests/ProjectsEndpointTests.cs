@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Kioskitos.Application.Projects;
+using Kioskitos.Application.StageNames;
 using Kioskitos.Application.Tags;
 using Kioskitos.Domain.Entities;
 using Kioskitos.Infrastructure.Auth;
@@ -23,13 +24,15 @@ public sealed class ProjectsEndpointTests(KioskitosWebApplicationFactory factory
 
     private readonly InMemoryProjectRepository _projects = new();
     private InMemoryTagRepository _tags = new();
+    private InMemoryStageNameRepository _stageNames = new();
 
     public static TheoryData<string, string> ProtectedRoutes => new()
     {
         { "POST", "/api/projects" },
         { "GET", $"/api/projects/{Guid.NewGuid()}" },
         { "GET", $"/api/clients/{Guid.NewGuid()}/projects" },
-        { "GET", "/api/tags" }
+        { "GET", "/api/tags" },
+        { "GET", "/api/stage-names" }
     };
 
     [Theory]
@@ -200,6 +203,52 @@ public sealed class ProjectsEndpointTests(KioskitosWebApplicationFactory factory
         Assert.Equal(["Branding", "Web"], tags!.Select(t => t.Name));
     }
 
+    [Fact]
+    public async Task Create_WithStages_ReturnsThemInOrder()
+    {
+        _stageNames = new InMemoryStageNameRepository(new StageName(_user.Id, "Design"));
+
+        var response = await CreateClient(_user).PostAsJsonAsync("/api/projects", new
+        {
+            clientId = _clientId,
+            name = "Website",
+            hasStages = true,
+            stages = new[] { "design", "Development" }
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var stages = json.GetProperty("stages").EnumerateArray().ToList();
+        Assert.Equal(["Design", "Development"], stages.Select(s => s.GetProperty("name").GetString()));
+        Assert.All(stages, s => Assert.Equal("Planning", s.GetProperty("status").GetString()));
+        Assert.Single(_stageNames.Added);
+    }
+
+    [Fact]
+    public async Task Create_WithStagesButNoneSent_ReturnsBadRequest()
+    {
+        var response = await CreateClient(_user).PostAsJsonAsync(
+            "/api/projects", new { clientId = _clientId, name = "Website", hasStages = true });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("invalid_data", problem!.Extensions["errorCode"]?.ToString());
+        Assert.Empty(_projects.Saved);
+    }
+
+    [Fact]
+    public async Task ListStageNames_ReturnsOnlyNamesOfAuthenticatedUser()
+    {
+        _stageNames = new InMemoryStageNameRepository(
+            new StageName(_user.Id, "Development"),
+            new StageName(_otherUser.Id, "Foreign"),
+            new StageName(_user.Id, "Design"));
+
+        var names = await CreateClient(_user).GetFromJsonAsync<List<StageNameDto>>("/api/stage-names");
+
+        Assert.Equal(["Design", "Development"], names!.Select(n => n.Name));
+    }
+
     private async Task<Project> SeedAsync(Guid userId, Guid clientId, string name)
     {
         var project = new Project(userId, clientId, name, null, null, null, false, null);
@@ -218,6 +267,7 @@ public sealed class ProjectsEndpointTests(KioskitosWebApplicationFactory factory
             {
                 services.AddSingleton<IProjectRepository>(_projects);
                 services.AddSingleton<ITagRepository>(_tags);
+                services.AddSingleton<IStageNameRepository>(_stageNames);
                 services.AddSingleton<IClientOwnershipChecker>(ownership);
             }))
             .CreateClient();

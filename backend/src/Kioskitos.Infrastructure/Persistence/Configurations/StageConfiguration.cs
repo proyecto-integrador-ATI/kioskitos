@@ -14,7 +14,7 @@ public sealed class StageConfiguration : IEntityTypeConfiguration<Stage>
         builder.Property(s => s.Id).ValueGeneratedNever();
 
         // Optional: the generic stage has no name. A name in use cannot be deleted.
-        builder.HasOne<StageName>()
+        builder.HasOne(s => s.StageName)
             .WithMany()
             .HasForeignKey(s => s.StageNameId)
             .OnDelete(DeleteBehavior.Restrict);

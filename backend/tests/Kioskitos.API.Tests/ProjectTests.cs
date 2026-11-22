@@ -157,4 +157,61 @@ public sealed class ProjectTests
         Assert.Throws<InvalidOperationException>(() => project.AddTag(foreignTag));
         Assert.Empty(project.Tags);
     }
+
+    [Fact]
+    public void AddStage_CreatesNamedStagesInOrder()
+    {
+        var project = CreateProject(hasStages: true);
+        var design = new StageName(UserId, "Design");
+        var development = new StageName(UserId, "Development");
+
+        project.AddStage(design);
+        project.AddStage(development);
+
+        Assert.Collection(
+            project.Stages,
+            s =>
+            {
+                Assert.False(s.IsGeneric);
+                Assert.Equal(design.Id, s.StageNameId);
+                Assert.Equal(0, s.Position);
+                Assert.Equal(ProjectStatus.Planning, s.Status);
+                Assert.Equal(project.Id, s.ProjectId);
+            },
+            s =>
+            {
+                Assert.Equal(development.Id, s.StageNameId);
+                Assert.Equal(1, s.Position);
+            });
+    }
+
+    [Fact]
+    public void AddStage_OnProjectWithoutStages_Throws()
+    {
+        var project = CreateProject(hasStages: false);
+
+        Assert.Throws<InvalidOperationException>(() => project.AddStage(new StageName(UserId, "Design")));
+        Assert.True(Assert.Single(project.Stages).IsGeneric);
+    }
+
+    [Fact]
+    public void AddStage_FromAnotherUser_Throws()
+    {
+        var project = CreateProject(hasStages: true);
+
+        Assert.Throws<InvalidOperationException>(
+            () => project.AddStage(new StageName(Guid.NewGuid(), "Design")));
+        Assert.Empty(project.Stages);
+    }
+
+    [Fact]
+    public void AddStage_SameNameTwice_Throws()
+    {
+        var project = CreateProject(hasStages: true);
+        var design = new StageName(UserId, "Design");
+        project.AddStage(design);
+
+        Assert.Throws<InvalidOperationException>(() => project.AddStage(design));
+        Assert.Single(project.Stages);
+    }
 }

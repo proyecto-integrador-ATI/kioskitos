@@ -1,4 +1,5 @@
 using Kioskitos.Application.Projects;
+using Kioskitos.Application.StageNames;
 using Kioskitos.Application.Tags;
 using Kioskitos.Domain.Entities;
 
@@ -53,6 +54,29 @@ internal sealed class InMemoryTagRepository(params Tag[] existing) : ITagReposit
     {
         All.Add(tag);
         Added.Add(tag);
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class InMemoryStageNameRepository(params StageName[] existing) : IStageNameRepository
+{
+    public List<StageName> All { get; } = [.. existing];
+    public List<StageName> Added { get; } = [];
+
+    public Task<IReadOnlyList<StageName>> ListByUserAsync(Guid userId, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<StageName>>(All.Where(sn => sn.UserId == userId).ToList());
+
+    public Task<IReadOnlyList<StageName>> FindByNamesAsync(
+        Guid userId, IReadOnlyCollection<string> names, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<StageName>>(All
+            .Where(sn => sn.UserId == userId
+                         && names.Contains(sn.Name, StringComparer.OrdinalIgnoreCase))
+            .ToList());
+
+    public Task AddAsync(StageName stageName, CancellationToken ct)
+    {
+        All.Add(stageName);
+        Added.Add(stageName);
         return Task.CompletedTask;
     }
 }

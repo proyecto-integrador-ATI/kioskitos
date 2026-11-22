@@ -97,6 +97,34 @@ public sealed class Project
         _tags.Add(new ProjectTag(Id, tag));
     }
 
+    /// <summary>
+    /// Adds a named stage at the end. Only for projects with stages; the name must be of the
+    /// same user and cannot be repeated in the project.
+    /// </summary>
+    public Stage AddStage(StageName stageName)
+    {
+        ArgumentNullException.ThrowIfNull(stageName);
+
+        if (!HasStages)
+        {
+            throw new InvalidOperationException("A project without stages only has its generic stage.");
+        }
+
+        if (stageName.UserId != UserId)
+        {
+            throw new InvalidOperationException("The stage name belongs to another user.");
+        }
+
+        if (_stages.Any(s => s.StageNameId == stageName.Id))
+        {
+            throw new InvalidOperationException("The project already has a stage with that name.");
+        }
+
+        var stage = Stage.CreateNamed(Id, stageName, _stages.Count);
+        _stages.Add(stage);
+        return stage;
+    }
+
     private static string? Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

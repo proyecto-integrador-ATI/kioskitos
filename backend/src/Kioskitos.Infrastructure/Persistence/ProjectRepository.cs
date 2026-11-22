@@ -11,6 +11,9 @@ public sealed class ProjectRepository(AppDbContext db) : IProjectRepository
 
     public Task<Project?> GetByIdAsync(Guid userId, Guid projectId, CancellationToken ct) =>
         WithTags()
+            .Include(p => p.Stages)
+            .ThenInclude(s => s.StageName)
+            .AsSplitQuery() // avoids multiplying tag rows by stage rows
             .FirstOrDefaultAsync(p => p.Id == projectId && p.UserId == userId, ct);
 
     public async Task<IReadOnlyList<Project>> ListByClientAsync(

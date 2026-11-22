@@ -14,7 +14,11 @@ public sealed record ProjectDto(
     bool HasStages,
     DateTime CreatedAt,
     DateOnly? DueDate,
-    IReadOnlyList<TagDto> Tags);
+    IReadOnlyList<TagDto> Tags,
+    IReadOnlyList<StageDto> Stages);
+
+/// <summary>Named stage of a project. The generic stage is never exposed.</summary>
+public sealed record StageDto(Guid Id, string Name, ProjectStatus Status);
 
 public sealed record ProjectSummaryDto(
     Guid Id,
@@ -37,7 +41,12 @@ internal static class ProjectMappings
         project.HasStages,
         project.CreatedAt,
         project.DueDate,
-        project.ToTagDtos());
+        project.ToTagDtos(),
+        project.Stages
+            .Where(s => !s.IsGeneric)
+            .OrderBy(s => s.Position)
+            .Select(s => new StageDto(s.Id, s.StageName!.Name, s.Status))
+            .ToList());
 
     public static ProjectSummaryDto ToSummaryDto(this Project project) => new(
         project.Id,

@@ -62,9 +62,37 @@ public sealed class ProjectsDatabaseTests(KioskitosWebApplicationFactory factory
 
             var list = await http.GetFromJsonAsync<JsonElement>($"/api/clients/{client.Id}/projects");
             Assert.Equal(projectId, Assert.Single(list.EnumerateArray()).GetProperty("id").GetGuid());
+            Assert.Empty(detail.GetProperty("stages").EnumerateArray()); // the generic stage is hidden
 
             var tags = await http.GetFromJsonAsync<JsonElement>("/api/tags");
             Assert.Equal(2, tags.GetArrayLength());
+
+            // A project with stages stores them in order and reuses the user's stage names.
+            var withStages = await http.PostAsJsonAsync("/api/projects", new
+            {
+                clientId = client.Id,
+                name = "App",
+                hasStages = true,
+                stages = new[] { "Design", "Development" }
+            });
+            Assert.Equal(HttpStatusCode.Created, withStages.StatusCode);
+            var withStagesId = (await withStages.Content.ReadFromJsonAsync<JsonElement>())
+                .GetProperty("id").GetGuid();
+            var withStagesDetail = await http.GetFromJsonAsync<JsonElement>($"/api/projects/{withStagesId}");
+            Assert.Equal(
+                ["Design", "Development"],
+                withStagesDetail.GetProperty("stages").EnumerateArray().Select(s => s.GetProperty("name").GetString()));
+
+            var again = await http.PostAsJsonAsync("/api/projects", new
+            {
+                clientId = client.Id,
+                name = "App 2",
+                hasStages = true,
+                stages = new[] { "design" }
+            });
+            Assert.Equal(HttpStatusCode.Created, again.StatusCode);
+            var stageNames = await http.GetFromJsonAsync<JsonElement>("/api/stage-names");
+            Assert.Equal(2, stageNames.GetArrayLength());
 
             // The real ownership checker rejects another user's client.
             var foreign = await http.PostAsJsonAsync(

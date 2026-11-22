@@ -12,8 +12,10 @@ public sealed class CreateProjectServiceTests
     private readonly InMemoryProjectRepository _projects = new();
     private readonly FakeClientOwnershipChecker _ownership = new((ClientId, UserId));
 
-    private CreateProjectService CreateService(InMemoryTagRepository? tags = null) =>
-        new(_projects, tags ?? new InMemoryTagRepository(), _ownership);
+    private CreateProjectService CreateService(
+        InMemoryTagRepository? tags = null, InMemoryStageNameRepository? stageNames = null) =>
+        new(_projects, tags ?? new InMemoryTagRepository(),
+            stageNames ?? new InMemoryStageNameRepository(), _ownership);
 
     private static CreateProjectCommand Command(
         string name = "Website",
@@ -21,9 +23,10 @@ public sealed class CreateProjectServiceTests
         ProjectStatus? status = null,
         string? description = null,
         Guid? clientId = null,
-        params string[] tags) =>
+        string[]? tags = null,
+        string[]? stages = null) =>
         new(clientId ?? ClientId, name, description, "Launch", "Landing only",
-            hasStages, new DateOnly(2027, 3, 1), status, tags);
+            hasStages, new DateOnly(2027, 3, 1), status, tags ?? [], stages ?? []);
 
     [Fact]
     public async Task Create_SavesProjectOnceAndReturnsDto()
@@ -55,11 +58,31 @@ public sealed class CreateProjectServiceTests
     }
 
     [Fact]
-    public async Task Create_WithStages_CreatesNoStage()
+    public async Task Create_WithStages_CreatesThemInOrder_ReusingExistingNamesIgnoringCase()
     {
-        await CreateService().CreateAsync(UserId, Command(hasStages: true), CancellationToken.None);
+        var existing = new StageName(UserId, "Design");
+        var stageNames = new InMemoryStageNameRepository(existing);
 
-        Assert.Empty(Assert.Single(_projects.Saved).Stages);
+        var result = await CreateService(stageNames: stageNames).CreateAsync(
+            UserId, Command(hasStages: true, stages: [" design ", "Development"]), CancellationToken.None);
+
+        var created = Assert.Single(stageNames.Added);
+        Assert.Equal("Development", created.Name);
+
+        var stages = Assert.Single(_projects.Saved).Stages;
+        Assert.Equal([existing.Id, created.Id], stages.Select(s => s.StageNameId!.Value));
+        Assert.All(stages, s => Assert.False(s.IsGeneric));
+
+        Assert.Equal(["Design", "Development"], result.Project!.Stages.Select(s => s.Name));
+        Assert.Equal(1, _projects.SaveChangesCalls);
+    }
+
+    [Fact]
+    public async Task Create_WithoutStages_ExposesNoStagesInDto()
+    {
+        var result = await CreateService().CreateAsync(UserId, Command(hasStages: false), CancellationToken.None);
+
+        Assert.Empty(result.Project!.Stages);
     }
 
     [Fact]
@@ -136,6 +159,13 @@ public sealed class CreateProjectServiceTests
         Command(clientId: Guid.Empty),
         Command(tags: [" "]),
         Command(tags: [new string('a', Tag.NameMaxLength + 1)]),
+        // With stages, at least one valid and non-repeated stage is required.
+        Command(hasStages: true),
+        Command(hasStages: true, stages: [" "]),
+        Command(hasStages: true, stages: [new string('a', StageName.NameMaxLength + 1)]),
+        Command(hasStages: true, stages: ["Design", "DESIGN"]),
+        // Without stages, none can be sent.
+        Command(hasStages: false, stages: ["Design"]),
     };
 
     [Theory]

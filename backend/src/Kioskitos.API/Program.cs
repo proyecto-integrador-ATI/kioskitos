@@ -10,6 +10,7 @@ using Microsoft.OpenApi;
 using Kioskitos.Application.GoogleCalendar;
 using Kioskitos.Application.Clients;
 using Kioskitos.Application.Projects;
+using Kioskitos.Application.StageNames;
 using Kioskitos.Application.Tags;
 using System.Text.Json.Serialization;
 
@@ -28,6 +29,7 @@ builder.Services.AddScoped<RegisterClientService>();
 builder.Services.AddScoped<CreateProjectService>();
 builder.Services.AddScoped<ProjectQueryService>();
 builder.Services.AddScoped<TagService>();
+builder.Services.AddScoped<StageNameService>();
 
 builder.Services
     .AddOptions<JwtOptions>()

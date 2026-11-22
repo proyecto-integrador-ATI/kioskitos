@@ -1,3 +1,4 @@
+using Kioskitos.Application.StageNames;
 using Kioskitos.Application.Tags;
 using Kioskitos.Domain.Entities;
 
@@ -12,7 +13,8 @@ public sealed record CreateProjectCommand(
     bool HasStages,
     DateOnly? DueDate,
     ProjectStatus? Status,
-    IReadOnlyList<string> TagNames);
+    IReadOnlyList<string> TagNames,
+    IReadOnlyList<string> StageNames);
 
 public enum CreateProjectError
 {
@@ -31,6 +33,7 @@ public sealed record CreateProjectResult(ProjectDto? Project, CreateProjectError
 public sealed class CreateProjectService(
     IProjectRepository projects,
     ITagRepository tags,
+    IStageNameRepository stageNames,
     IClientOwnershipChecker clientOwnership)
 {
     public async Task<CreateProjectResult> CreateAsync(
@@ -58,52 +61,77 @@ public sealed class CreateProjectService(
             command.DueDate,
             command.Status ?? ProjectStatus.Planning);
 
-        foreach (var tag in await ResolveTagsAsync(userId, command.TagNames, ct))
+        var projectTags = await ResolveByNameAsync(
+            Clean(command.TagNames),
+            names => tags.FindByNamesAsync(userId, names, ct),
+            name => new Tag(userId, name),
+            tag => tags.AddAsync(tag, ct),
+            tag => tag.Name);
+
+        foreach (var tag in projectTags)
         {
             project.AddTag(tag);
         }
 
+        // Stages keep the order in which they were sent.
+        var projectStageNames = await ResolveByNameAsync(
+            Clean(command.StageNames),
+            names => stageNames.FindByNamesAsync(userId, names, ct),
+            name => new StageName(userId, name),
+            stageName => stageNames.AddAsync(stageName, ct),
+            stageName => stageName.Name);
+
+        foreach (var stageName in projectStageNames)
+        {
+            project.AddStage(stageName);
+        }
+
         await projects.AddAsync(project, ct);
 
-        // Single save: the project, its generic stage and any new tag are stored together or not at all.
+        // Single save: the project, its stages and any new tag or stage name are stored together or not at all.
         await projects.SaveChangesAsync(ct);
 
         return CreateProjectResult.Success(project.ToDto());
     }
 
-    /// <summary>Reuses the user's existing tags (ignoring case) and creates the missing ones.</summary>
-    private async Task<IReadOnlyList<Tag>> ResolveTagsAsync(
-        Guid userId, IReadOnlyList<string> tagNames, CancellationToken ct)
+    /// <summary>Reuses the user's existing entities with those names (ignoring case) and creates the missing ones.</summary>
+    private static async Task<IReadOnlyList<T>> ResolveByNameAsync<T>(
+        IReadOnlyList<string> names,
+        Func<IReadOnlyList<string>, Task<IReadOnlyList<T>>> findExisting,
+        Func<string, T> create,
+        Func<T, Task> add,
+        Func<T, string> nameOf)
     {
-        var names = tagNames
-            .Select(n => n.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
         if (names.Count == 0)
         {
             return [];
         }
 
-        var existing = await tags.FindByNamesAsync(userId, names, ct);
-        var resolved = new List<Tag>(names.Count);
+        var existing = await findExisting(names);
+        var resolved = new List<T>(names.Count);
 
         foreach (var name in names)
         {
-            var tag = existing.FirstOrDefault(t =>
-                string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+            var entity = existing.FirstOrDefault(e =>
+                string.Equals(nameOf(e), name, StringComparison.OrdinalIgnoreCase));
 
-            if (tag is null)
+            if (entity is null)
             {
-                tag = new Tag(userId, name);
-                await tags.AddAsync(tag, ct);
+                entity = create(name);
+                await add(entity);
             }
 
-            resolved.Add(tag);
+            resolved.Add(entity);
         }
 
         return resolved;
     }
+
+    /// <summary>Trims the names and drops repeated ones (ignoring case), keeping the first occurrence.</summary>
+    private static IReadOnlyList<string> Clean(IReadOnlyList<string> names) => names
+        .Select(n => n.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
 
     private static bool IsValid(CreateProjectCommand command) =>
         command.ClientId != Guid.Empty
@@ -113,8 +141,19 @@ public sealed class CreateProjectService(
         && FitsText(command.Objectives)
         && FitsText(command.Scope)
         && (command.Status is null || Enum.IsDefined(command.Status.Value))
-        && command.TagNames.All(n =>
-            !string.IsNullOrWhiteSpace(n) && n.Trim().Length <= Tag.NameMaxLength);
+        && AreValidNames(command.TagNames, Tag.NameMaxLength)
+        && AreValidStages(command);
+
+    // With stages: at least one, without repeating names. Without stages: none (only the generic one).
+    private static bool AreValidStages(CreateProjectCommand command) =>
+        command.HasStages
+            ? command.StageNames.Count > 0
+              && AreValidNames(command.StageNames, StageName.NameMaxLength)
+              && Clean(command.StageNames).Count == command.StageNames.Count
+            : command.StageNames.Count == 0;
+
+    private static bool AreValidNames(IReadOnlyList<string> names, int maxLength) =>
+        names.All(n => !string.IsNullOrWhiteSpace(n) && n.Trim().Length <= maxLength);
 
     private static bool FitsText(string? value) =>
         value is null || value.Trim().Length <= Project.TextMaxLength;

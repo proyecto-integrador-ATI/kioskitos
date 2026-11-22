@@ -29,7 +29,8 @@ public sealed class ProjectsController(
             request.HasStages,
             request.DueDate,
             request.Status,
-            request.Tags ?? []);
+            request.Tags ?? [],
+            request.Stages ?? []);
 
         var result = await createService.CreateAsync(userId, command, ct);
 
@@ -47,7 +48,7 @@ public sealed class ProjectsController(
             _ => BadRequest(ProjectProblem(
                 StatusCodes.Status400BadRequest,
                 "invalid_data",
-                "The project data is invalid. Check the name, the text lengths, the status and the tags."))
+                "The project data is invalid. Check the name, the text lengths, the status, the tags and the stages."))
         };
     }
 

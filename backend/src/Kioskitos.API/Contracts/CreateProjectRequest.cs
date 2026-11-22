@@ -13,5 +13,7 @@ public sealed record CreateProjectRequest(
     bool HasStages,
     DateOnly? DueDate,
     ProjectStatus? Status,
-    // Each tag's length is validated by CreateProjectService.
-    List<string>? Tags);
+    // Each tag's and stage's length is validated by CreateProjectService.
+    List<string>? Tags,
+    // Stage names in order. Required (at least one) when HasStages is true.
+    List<string>? Stages);
