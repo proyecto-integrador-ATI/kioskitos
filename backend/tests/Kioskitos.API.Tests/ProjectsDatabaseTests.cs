@@ -21,9 +21,9 @@ public sealed class ProjectsDatabaseTests(KioskitosWebApplicationFactory factory
         var user = new User($"sub-{Guid.NewGuid()}", "projects-db@example.com", "Db User");
         var otherUser = new User($"sub-{Guid.NewGuid()}", "projects-other@example.com", "Other");
         var client = new Client(user.Id, "Acme", null, null);
-        client.AddContact("Ana", "ana@acme.com", "123");
+        client.AddContact("Ana", "ana@acme.com", "099123456");
         var foreignClient = new Client(otherUser.Id, "Foreign", null, null);
-        foreignClient.AddContact("Bob", "bob@foreign.com", "456");
+        foreignClient.AddContact("Bob", "bob@foreign.com", "099654321");
         var existingTag = new Tag(user.Id, "Branding");
 
         using (var scope = factory.Services.CreateScope())
