@@ -1,10 +1,14 @@
+using System.Text.RegularExpressions;
+
 namespace Kioskitos.Domain.Entities;
 
-public sealed class ClientContact
+public sealed partial class ClientContact
 {
     public const int NameMaxLength = 200;
     public const int EmailMaxLength = 320;
     public const int PhoneMaxLength = 30;
+    public const int PhoneMinDigits = 8;
+    public const int PhoneMaxDigits = 15;
 
     public Guid Id { get; private set; }
     public Guid ClientId { get; private set; }
@@ -32,10 +36,32 @@ public sealed class ClientContact
             throw new ArgumentException("The contact phone is required.", nameof(phone));
         }
 
+        if (!IsValidPhone(phone))
+        {
+            throw new ArgumentException("The contact phone is not valid.", nameof(phone));
+        }
+
         Id = Guid.NewGuid();
         ClientId = clientId;
         Name = name.Trim();
         Email = email.Trim();
         Phone = phone.Trim();
     }
+
+    public static bool IsValidPhone(string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return false;
+        }
+
+        var trimmed = phone.Trim();
+        var digits = trimmed.Count(char.IsAsciiDigit);
+
+        return PhoneCharacters().IsMatch(trimmed)
+            && digits is >= PhoneMinDigits and <= PhoneMaxDigits;
+    }
+
+    [GeneratedRegex(@"^\+?[0-9 ()-]+$")]
+    private static partial Regex PhoneCharacters();
 }

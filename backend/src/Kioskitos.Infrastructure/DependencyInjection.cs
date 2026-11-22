@@ -1,4 +1,5 @@
 using Kioskitos.Application.Auth;
+using Kioskitos.Application.Users;
 using Kioskitos.Infrastructure.Auth;
 using Kioskitos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

@@ -13,6 +13,7 @@ using Kioskitos.Application.Projects;
 using Kioskitos.Application.StageNames;
 using Kioskitos.Application.Tags;
 using System.Text.Json.Serialization;
+using Kioskitos.Application.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,7 @@ builder.Services.AddScoped<CreateProjectService>();
 builder.Services.AddScoped<ProjectQueryService>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<StageNameService>();
+builder.Services.AddScoped<UserProfileService>();
 
 builder.Services
     .AddOptions<JwtOptions>()

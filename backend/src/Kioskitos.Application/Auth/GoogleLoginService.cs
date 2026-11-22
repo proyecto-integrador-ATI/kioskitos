@@ -1,3 +1,4 @@
+using Kioskitos.Application.Users;
 using Kioskitos.Domain.Entities;
 
 namespace Kioskitos.Application.Auth;

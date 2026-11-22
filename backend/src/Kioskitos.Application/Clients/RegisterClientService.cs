@@ -34,7 +34,7 @@ public sealed class RegisterClientService(IClientRepository clients)
             || command.Contacts.Any(c =>
                 string.IsNullOrWhiteSpace(c.Name)
                 || string.IsNullOrWhiteSpace(c.Email)
-                || string.IsNullOrWhiteSpace(c.Phone)))
+                || !ClientContact.IsValidPhone(c.Phone)))
         {
             return RegisterClientResult.Failure(RegisterClientError.InvalidData);
         }
