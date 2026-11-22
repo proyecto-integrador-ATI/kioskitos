@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Kioskitos.Application.GoogleCalendar;
 using Kioskitos.Infrastructure.GoogleCalendar;
 using Microsoft.AspNetCore.DataProtection;
+using Kioskitos.Application.Clients;
 
 namespace Kioskitos.Infrastructure;
 
@@ -44,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IGoogleCalendarConnectionRepository, GoogleCalendarConnectionRepository>();
         services.AddSingleton<ITokenProtector, DataProtectionTokenProtector>();
         services.AddSingleton<IGoogleCalendarGateway, GoogleCalendarGateway>();
+        services.AddScoped<IClientRepository, ClientRepository>();
 
         return services;
     }

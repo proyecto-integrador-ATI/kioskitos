@@ -11,6 +11,9 @@ public sealed class AppDbContext(
     public DbSet<User> Users => Set<User>();
     public DbSet<GoogleCalendarConnection> GoogleCalendarConnections => Set<GoogleCalendarConnection>();
 
+    public DbSet<Client> Clients => Set<Client>();
+    public DbSet<ClientContact> ClientContacts => Set<ClientContact>();
+
     // Data Protection keys: they must be persisted to be able to decrypt the refresh tokens.
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
