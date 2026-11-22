@@ -16,5 +16,6 @@ public sealed class ClientContactConfiguration : IEntityTypeConfiguration<Client
         builder.Property(cc => cc.Name).HasMaxLength(ClientContact.NameMaxLength).IsRequired();
         builder.Property(cc => cc.Email).HasMaxLength(ClientContact.EmailMaxLength).IsRequired();
         builder.Property(cc => cc.Phone).HasMaxLength(ClientContact.PhoneMaxLength).IsRequired();
+        builder.Property(cc => cc.Position).IsRequired();
     }
 }
