@@ -15,11 +15,11 @@ public enum RegisterClientError
     InvalidData
 }
 
-public sealed record RegisterClientResult(Client? Client, RegisterClientError? Error)
+public sealed record RegisterClientResult(ClientDto? Client, RegisterClientError? Error)
 {
     public bool Succeeded => Error is null;
 
-    public static RegisterClientResult Success(Client client) => new(client, null);
+    public static RegisterClientResult Success(ClientDto client) => new(client, null);
     public static RegisterClientResult Failure(RegisterClientError error) => new(null, error);
 }
 
@@ -50,6 +50,6 @@ public sealed class RegisterClientService(IClientRepository clients)
         await clients.AddAsync(client, ct);
         await clients.SaveChangesAsync(ct);
 
-        return RegisterClientResult.Success(client);
+        return RegisterClientResult.Success(client.ToDto());
     }
 }

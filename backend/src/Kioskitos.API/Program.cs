@@ -27,6 +27,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GoogleLoginService>();
 builder.Services.AddScoped<ConnectGoogleCalendarService>();
 builder.Services.AddScoped<RegisterClientService>();
+builder.Services.AddScoped<ClientQueryService>();
 builder.Services.AddScoped<CreateProjectService>();
 builder.Services.AddScoped<ProjectQueryService>();
 builder.Services.AddScoped<TagService>();
