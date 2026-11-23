@@ -12,6 +12,14 @@ export type Client = {
   contacts: ClientContact[];
 };
 
+/** Row of the clients list: only the primary contact (the first one registered). */
+export type ClientSummary = {
+  id: string;
+  name: string;
+  industry: string | null;
+  primaryContact: ClientContact | null;
+};
+
 export type RegisterClient = {
   name: string;
   industry: string | null;
@@ -27,3 +35,9 @@ export const registerClient = (data: RegisterClient) =>
     headers: authHeaders(),
     body: JSON.stringify(data),
   });
+
+export const listClients = () =>
+  apiFetch<ClientSummary[]>("/api/clients", { headers: authHeaders() });
+
+export const getClient = (id: string) =>
+  apiFetch<Client>(`/api/clients/${encodeURIComponent(id)}`, { headers: authHeaders() });

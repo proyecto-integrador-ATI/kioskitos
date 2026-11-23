@@ -55,6 +55,13 @@ describe("NewClientPage", () => {
       contacts: [{ name: "Ana", email: "ana@sur.uy", phone: "099123456" }],
     });
     expect(await screen.findByRole("status")).toHaveTextContent("Registramos a Estudio Sur.");
+    expect(screen.getByRole("link", { name: "Ver cliente" })).toHaveAttribute("href", "/clients/c1");
+  });
+
+  it("links back to the clients list", () => {
+    render(<NewClientPage />);
+
+    expect(screen.getByRole("link", { name: "← Volver a clientes" })).toHaveAttribute("href", "/clients");
   });
 
   it("does not call the API when required fields are missing", async () => {

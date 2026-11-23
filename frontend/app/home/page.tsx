@@ -9,6 +9,11 @@ import { getMyProfile, type UserProfile } from "../../services/users";
 
 const SHORTCUTS = [
   {
+    href: "/clients",
+    title: "Mis clientes",
+    description: "Consultá tus clientes y sus datos de contacto.",
+  },
+  {
     href: "/clients/new",
     title: "Registrar cliente",
     description: "Cargá un cliente nuevo con sus personas de contacto.",
