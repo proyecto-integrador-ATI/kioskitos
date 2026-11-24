@@ -16,7 +16,7 @@ const SHORTCUTS = [
   {
     href: "/projects",
     title: "Mis proyectos",
-    description: "Mirá todos tus proyectos, de todos tus clientess.",
+    description: "Mirá todos tus proyectos, de todos tus clientes.",
   },
   {
     href: "/clients/new",
