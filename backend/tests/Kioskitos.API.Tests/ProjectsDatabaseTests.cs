@@ -122,6 +122,57 @@ public sealed class ProjectsDatabaseTests(KioskitosWebApplicationFactory factory
         }
     }
 
+    [RequiresDatabaseFact]
+    public async Task ListByUser_ReturnsOwnProjectsAcrossClientsWithClientNameAndTags()
+    {
+        var user = new User($"sub-{Guid.NewGuid()}", "projects-list@example.com", "List User");
+        var otherUser = new User($"sub-{Guid.NewGuid()}", "projects-list-other@example.com", "Other");
+        var acme = new Client(user.Id, "Acme", null, null);
+        acme.AddContact("Ana", "ana@acme.com", "099123456");
+        var globex = new Client(user.Id, "Globex", null, null);
+        globex.AddContact("Gus", "gus@globex.com", "099111222");
+        var foreignClient = new Client(otherUser.Id, "Foreign", null, null);
+        foreignClient.AddContact("Bob", "bob@foreign.com", "099654321");
+
+        var website = new Project(user.Id, acme.Id, "Website", null, null, null, false, null);
+        website.AddTag(new Tag(user.Id, "web"));
+        website.AddTag(new Tag(user.Id, "Branding"));
+        var app = new Project(user.Id, globex.Id, "App", null, null, null, false, null);
+        var foreignProject = new Project(otherUser.Id, foreignClient.Id, "Nope", null, null, null, false, null);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Users.AddRange(user, otherUser);
+            db.Clients.AddRange(acme, globex, foreignClient);
+            db.Projects.AddRange(website, app, foreignProject);
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            using var scope = factory.Services.CreateScope();
+            var repository = new ProjectRepository(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+
+            var items = await repository.ListByUserAsync(user.Id, CancellationToken.None);
+
+            Assert.Equal(2, items.Count);
+            var websiteItem = Assert.Single(items, i => i.Project.Id == website.Id);
+            Assert.Equal("Acme", websiteItem.ClientName);
+            Assert.Equal(
+                ["Branding", "web"],
+                websiteItem.Project.Tags.Select(pt => pt.Tag.Name).Order(StringComparer.OrdinalIgnoreCase));
+            Assert.Equal("Globex", Assert.Single(items, i => i.Project.Id == app.Id).ClientName);
+        }
+        finally
+        {
+            // Deleting the users cascades to clients, projects, stages and tags.
+            using var cleanupScope = factory.Services.CreateScope();
+            await cleanupScope.ServiceProvider.GetRequiredService<AppDbContext>()
+                .Users.Where(u => u.Id == user.Id || u.Id == otherUser.Id).ExecuteDeleteAsync();
+        }
+    }
+
     private AuthenticationHeaderValue Bearer(User user)
     {
         var jwtOptions = factory.Services.GetRequiredService<IOptions<JwtOptions>>();

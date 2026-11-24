@@ -30,4 +30,15 @@ public sealed class ProjectQueryService(
             .Select(p => p.ToSummaryDto())
             .ToList();
     }
+
+    /// <summary>Lists every project of the user across all clients, newest first.</summary>
+    public async Task<IReadOnlyList<ProjectListItemDto>> ListAllAsync(Guid userId, CancellationToken ct)
+    {
+        var userProjects = await projects.ListByUserAsync(userId, ct);
+
+        return userProjects
+            .OrderByDescending(p => p.Project.CreatedAt)
+            .Select(p => p.ToListItemDto())
+            .ToList();
+    }
 }

@@ -67,6 +67,16 @@ internal static class ProjectMappings
         project.DueDate,
         project.ToTagDtos());
 
+    public static ProjectListItemDto ToListItemDto(this ProjectWithClientName item) => new(
+        item.Project.Id,
+        item.Project.ClientId,
+        item.ClientName,
+        item.Project.Name,
+        item.Project.Status,
+        item.Project.CreatedAt,
+        item.Project.DueDate,
+        item.Project.ToTagDtos());
+
     private static IReadOnlyList<TagDto> ToTagDtos(this Project project) => project.Tags
         .Select(pt => new TagDto(pt.Tag.Id, pt.Tag.Name))
         .OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase)

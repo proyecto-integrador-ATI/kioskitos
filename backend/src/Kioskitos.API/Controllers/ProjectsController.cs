@@ -52,6 +52,17 @@ public sealed class ProjectsController(
         };
     }
 
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<ProjectListItemDto>>> List(CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await queryService.ListAllAsync(userId, ct));
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ProjectDto>> GetById(Guid id, CancellationToken ct)
     {
