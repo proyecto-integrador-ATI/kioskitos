@@ -31,17 +31,16 @@ export default function ClientsPage() {
       return;
     }
     let current = true;
-    const message = takeNotice();
     listClients()
       .then((clients) => {
         if (!current) return;
         setState({ kind: "loaded", clients });
-        setNoticeMessage(message);
+        setNoticeMessage(takeNotice());
       })
       .catch(() => {
         if (!current) return;
         setState({ kind: "error" });
-        setNoticeMessage(message);
+        setNoticeMessage(takeNotice());
       });
     return () => {
       current = false;
