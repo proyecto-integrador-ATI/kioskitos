@@ -9,6 +9,9 @@ using Kioskitos.Application.GoogleCalendar;
 using Kioskitos.Infrastructure.GoogleCalendar;
 using Microsoft.AspNetCore.DataProtection;
 using Kioskitos.Application.Clients;
+using Kioskitos.Application.Projects;
+using Kioskitos.Application.StageNames;
+using Kioskitos.Application.Tags;
 
 namespace Kioskitos.Infrastructure;
 
@@ -46,6 +49,10 @@ public static class DependencyInjection
         services.AddSingleton<ITokenProtector, DataProtectionTokenProtector>();
         services.AddSingleton<IGoogleCalendarGateway, GoogleCalendarGateway>();
         services.AddScoped<IClientRepository, ClientRepository>();
+        services.AddScoped<IClientOwnershipChecker, ClientOwnershipChecker>();
+        services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<IStageNameRepository, StageNameRepository>();
 
         return services;
     }

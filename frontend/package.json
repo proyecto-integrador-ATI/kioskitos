@@ -11,7 +11,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@hookform/resolvers": "^7.0.7",
+    "@hookform/resolvers": "^7.0.8",
     "@react-oauth/google": "^0.13.5",
     "next": "16.4.3",
     "react": "19.3.0",

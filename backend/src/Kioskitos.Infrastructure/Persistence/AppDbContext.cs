@@ -14,12 +14,21 @@ public sealed class AppDbContext(
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<ClientContact> ClientContacts => Set<ClientContact>();
 
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<Stage> Stages => Set<Stage>();
+    public DbSet<StageName> StageNames => Set<StageName>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<ProjectTag> ProjectTags => Set<ProjectTag>();
+
     // Data Protection keys: they must be persisted to be able to decrypt the refresh tokens.
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Case-insensitive text type, used for tag and stage names.
+        modelBuilder.HasPostgresExtension("citext");
 
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AppDbContext).Assembly);
