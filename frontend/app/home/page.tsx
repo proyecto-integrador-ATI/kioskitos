@@ -14,6 +14,11 @@ const SHORTCUTS = [
     description: "Consultá tus clientes y sus datos de contacto.",
   },
   {
+    href: "/projects",
+    title: "Mis proyectos",
+    description: "Mirá todos tus proyectos, de todos tus clientes.",
+  },
+  {
     href: "/clients/new",
     title: "Registrar cliente",
     description: "Cargá un cliente nuevo con sus personas de contacto.",

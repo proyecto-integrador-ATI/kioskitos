@@ -29,6 +29,16 @@ internal sealed class InMemoryProjectRepository : IProjectRepository
         Task.FromResult<IReadOnlyList<Project>>(
             Saved.Where(p => p.UserId == userId && p.ClientId == clientId).ToList());
 
+    /// <summary>Client names by id. Projects whose client is not here are left out, like the SQL inner join.</summary>
+    public Dictionary<Guid, string> ClientNames { get; } = [];
+
+    public Task<IReadOnlyList<ProjectWithClientName>> ListByUserAsync(Guid userId, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<ProjectWithClientName>>(
+            Saved
+                .Where(p => p.UserId == userId && ClientNames.ContainsKey(p.ClientId))
+                .Select(p => new ProjectWithClientName(p, ClientNames[p.ClientId]))
+                .ToList());
+
     public Task SaveChangesAsync(CancellationToken ct)
     {
         SaveChangesCalls++;

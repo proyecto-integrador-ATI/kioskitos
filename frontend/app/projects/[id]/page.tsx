@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { ApiError } from "../../../services/apiError";
 import { getToken } from "../../../services/auth";
@@ -15,6 +15,8 @@ type State =
 function ProjectDetail() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  // The detail is reached from two lists; "from" says which one the back link returns to.
+  const fromAllProjects = useSearchParams().get("from") === "projects";
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
@@ -44,12 +46,18 @@ function ProjectDetail() {
 
   return (
     <main className="mx-auto w-full max-w-3xl p-8">
-      <Link
-        href={`/clients/${project.clientId}/projects`}
-        className="text-sm text-slate-600 hover:underline"
-      >
-        ← Volver a los proyectos del cliente
-      </Link>
+      {fromAllProjects ? (
+        <Link href="/projects" className="text-sm text-slate-600 hover:underline">
+          ← Volver a todos los proyectos
+        </Link>
+      ) : (
+        <Link
+          href={`/clients/${project.clientId}/projects`}
+          className="text-sm text-slate-600 hover:underline"
+        >
+          ← Volver a los proyectos del cliente
+        </Link>
+      )}
       <h1 className="mt-4 text-2xl font-bold">{project.name}</h1>
 
       <dl className="mt-6 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">

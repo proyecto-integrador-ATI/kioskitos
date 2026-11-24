@@ -91,4 +91,41 @@ public sealed class ProjectQueryServiceTests
 
         Assert.Null(list);
     }
+
+    [Fact]
+    public async Task ListAll_ReturnsOnlyUserProjectsAcrossClients_NewestFirst()
+    {
+        _projects.ClientNames[ClientId] = "Acme";
+        _projects.ClientNames[OtherClientId] = "Globex";
+        var first = await SeedAsync("First");
+        await SeedAsync("Another user's", userId: OtherUserId);
+        await Task.Delay(5); // CreatedAt must differ for the ordering to be observable.
+        var second = await SeedAsync("Second", clientId: OtherClientId);
+
+        var list = await _service.ListAllAsync(UserId, CancellationToken.None);
+
+        Assert.Equal([second.Id, first.Id], list.Select(p => p.Id));
+    }
+
+    [Fact]
+    public async Task ListAll_IncludesClientAndTagsSortedByName()
+    {
+        _projects.ClientNames[ClientId] = "Acme";
+        var project = await SeedAsync("Website");
+        project.AddTag(new Tag(UserId, "web"));
+        project.AddTag(new Tag(UserId, "Branding"));
+
+        var item = Assert.Single(await _service.ListAllAsync(UserId, CancellationToken.None));
+
+        Assert.Equal(ClientId, item.ClientId);
+        Assert.Equal("Acme", item.ClientName);
+        Assert.Equal("Website", item.Name);
+        Assert.Equal(["Branding", "web"], item.Tags.Select(t => t.Name));
+    }
+
+    [Fact]
+    public async Task ListAll_WithoutProjects_ReturnsEmptyList()
+    {
+        Assert.Empty(await _service.ListAllAsync(UserId, CancellationToken.None));
+    }
 }

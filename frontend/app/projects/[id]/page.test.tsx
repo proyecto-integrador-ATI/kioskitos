@@ -7,10 +7,12 @@ import ProjectPage from "./page";
 const replace = vi.fn();
 const router = { replace }; // stable reference, like Next's real router
 const apiFetch = vi.fn();
+let searchParams = new URLSearchParams();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
   useParams: () => ({ id: "p1" }),
+  useSearchParams: () => searchParams,
 }));
 vi.mock("../../../services/api", () => ({
   apiFetch: (...args: unknown[]) => apiFetch(...args),
@@ -38,6 +40,18 @@ describe("ProjectPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    searchParams = new URLSearchParams();
+  });
+
+  it("links back to all projects when opened from the projects list", async () => {
+    localStorage.setItem("kioskitos_token", "jwt");
+    searchParams = new URLSearchParams("from=projects");
+    apiFetch.mockResolvedValueOnce(PROJECT);
+
+    render(<ProjectPage />);
+
+    expect(await screen.findByRole("link", { name: /Volver/ })).toHaveAttribute("href", "/projects");
+    expect(screen.getByRole("link", { name: /Volver/ })).toHaveTextContent("Volver a todos los proyectos");
   });
 
   it("redirects to login when there is no session", () => {

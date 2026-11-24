@@ -19,6 +19,9 @@ export function AppHeader() {
           <Link href="/clients" className="text-normal text-cream hover:underline">
             Clientes
           </Link>
+          <Link href="/projects" className="text-normal text-cream hover:underline">
+            Proyectos
+          </Link>
           <Link href="/profile" className="text-normal text-cream hover:underline">
             Mi perfil
           </Link>

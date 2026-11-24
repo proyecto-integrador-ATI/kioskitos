@@ -42,6 +42,7 @@ describe("HomePage", () => {
     expect(screen.getByText("ana@example.com")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Google Calendar/ })).toHaveAttribute("href", "/calendar");
     expect(screen.getByRole("link", { name: /Mis clientes/ })).toHaveAttribute("href", "/clients");
+    expect(screen.getByRole("link", { name: /Mis proyectos/ })).toHaveAttribute("href", "/projects");
     expect(screen.getByRole("link", { name: /Registrar cliente/ })).toHaveAttribute("href", "/clients/new");
     expect(screen.getAllByRole("link", { name: /Mi perfil/ })[0]).toHaveAttribute("href", "/profile");
   });

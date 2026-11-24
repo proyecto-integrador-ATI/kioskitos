@@ -23,6 +23,17 @@ public sealed class ProjectRepository(AppDbContext db) : IProjectRepository
             .Where(p => p.ClientId == clientId && p.UserId == userId)
             .ToListAsync(ct);
 
+    // Project has no Client navigation, so the name comes from an explicit join. Filtering the
+    // client by user too keeps the query tenant-safe even if a project ever pointed elsewhere.
+    public async Task<IReadOnlyList<ProjectWithClientName>> ListByUserAsync(
+        Guid userId, CancellationToken ct) =>
+        await (
+            from project in WithTags()
+            join client in db.Clients on project.ClientId equals client.Id
+            where project.UserId == userId && client.UserId == userId
+            select new ProjectWithClientName(project, client.Name))
+            .ToListAsync(ct);
+
     public Task SaveChangesAsync(CancellationToken ct) =>
         db.SaveChangesAsync(ct);
 

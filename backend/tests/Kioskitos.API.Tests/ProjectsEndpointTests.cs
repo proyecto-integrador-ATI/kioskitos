@@ -29,6 +29,7 @@ public sealed class ProjectsEndpointTests(KioskitosWebApplicationFactory factory
     public static TheoryData<string, string> ProtectedRoutes => new()
     {
         { "POST", "/api/projects" },
+        { "GET", "/api/projects" },
         { "GET", $"/api/projects/{Guid.NewGuid()}" },
         { "GET", $"/api/clients/{Guid.NewGuid()}/projects" },
         { "GET", "/api/tags" },
@@ -188,6 +189,35 @@ public sealed class ProjectsEndpointTests(KioskitosWebApplicationFactory factory
         var response = await CreateClient(_user).GetAsync($"/api/clients/{_otherClientId}/projects");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ListAll_ReturnsOnlyOwnProjectsWithClientName()
+    {
+        _projects.ClientNames[_clientId] = "Acme";
+        _projects.ClientNames[_otherClientId] = "Foreign";
+        var project = await SeedAsync(_user.Id, _clientId, "Website");
+        await SeedAsync(_otherUser.Id, _otherClientId, "Not mine");
+
+        var response = await CreateClient(_user).GetAsync("/api/projects");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var item = Assert.Single(json.EnumerateArray());
+        Assert.Equal(project.Id, item.GetProperty("id").GetGuid());
+        Assert.Equal(_clientId, item.GetProperty("clientId").GetGuid());
+        Assert.Equal("Acme", item.GetProperty("clientName").GetString());
+        Assert.Equal("Planning", item.GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task ListAll_WithoutProjects_ReturnsEmptyArray()
+    {
+        var response = await CreateClient(_user).GetAsync("/api/projects");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Empty(json.EnumerateArray());
     }
 
     [Fact]
