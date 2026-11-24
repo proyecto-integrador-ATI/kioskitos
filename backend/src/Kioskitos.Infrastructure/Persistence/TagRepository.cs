@@ -15,12 +15,11 @@ public sealed class TagRepository(AppDbContext db) : ITagRepository
     public async Task<IReadOnlyList<Tag>> FindByNamesAsync(
         Guid userId, IReadOnlyCollection<string> names, CancellationToken ct)
     {
-        var lowered = names.Select(n => n.ToLowerInvariant()).ToList();
-
+        // Name is citext, so this comparison already ignores case.
         // Tracked on purpose: the returned tags are reused when creating a project,
         // and untracked ones would be inserted again on SaveChanges.
         return await db.Tags
-            .Where(t => t.UserId == userId && lowered.Contains(t.Name.ToLower()))
+            .Where(t => t.UserId == userId && names.Contains(t.Name))
             .ToListAsync(ct);
     }
 

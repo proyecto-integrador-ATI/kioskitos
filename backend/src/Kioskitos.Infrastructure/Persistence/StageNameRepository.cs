@@ -15,11 +15,10 @@ public sealed class StageNameRepository(AppDbContext db) : IStageNameRepository
     public async Task<IReadOnlyList<StageName>> FindByNamesAsync(
         Guid userId, IReadOnlyCollection<string> names, CancellationToken ct)
     {
-        var lowered = names.Select(n => n.ToLowerInvariant()).ToList();
-
+        // Name is citext, so this comparison already ignores case.
         // Tracked on purpose: reused names would be inserted again on SaveChanges otherwise.
         return await db.StageNames
-            .Where(sn => sn.UserId == userId && lowered.Contains(sn.Name.ToLower()))
+            .Where(sn => sn.UserId == userId && names.Contains(sn.Name))
             .ToListAsync(ct);
     }
 

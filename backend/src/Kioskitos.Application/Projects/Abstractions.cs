@@ -14,6 +14,12 @@ public interface IProjectRepository
 
     /// <summary>Saves every pending change of the unit of work (projects, stages and new tags).</summary>
     Task SaveChangesAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Like <see cref="SaveChangesAsync"/>, but returns false (and discards the pending changes)
+    /// when a tag or stage name already exists because another request just saved it.
+    /// </summary>
+    Task<bool> TrySaveChangesAsync(CancellationToken ct);
 }
 
 public interface IClientOwnershipChecker

@@ -50,6 +50,23 @@ public sealed class CreateProjectService(
             return CreateProjectResult.Failure(CreateProjectError.ClientNotFound);
         }
 
+        var project = await BuildProjectAsync(userId, command, ct);
+
+        // Single save: the project, its stages and any new tag or stage name are stored together or not at all.
+        // If another request of the same user saved one of our new tags or stage names in the meantime,
+        // the save fails. Then we build the project again: this time that name exists and is reused.
+        if (!await projects.TrySaveChangesAsync(ct))
+        {
+            project = await BuildProjectAsync(userId, command, ct);
+            await projects.SaveChangesAsync(ct);
+        }
+
+        return CreateProjectResult.Success(project.ToDto());
+    }
+
+    /// <summary>Creates the project with its tags and stages and adds everything to the unit of work, without saving.</summary>
+    private async Task<Project> BuildProjectAsync(Guid userId, CreateProjectCommand command, CancellationToken ct)
+    {
         var project = new Project(
             userId,
             command.ClientId,
@@ -88,10 +105,7 @@ public sealed class CreateProjectService(
 
         await projects.AddAsync(project, ct);
 
-        // Single save: the project, its stages and any new tag or stage name are stored together or not at all.
-        await projects.SaveChangesAsync(ct);
-
-        return CreateProjectResult.Success(project.ToDto());
+        return project;
     }
 
     /// <summary>Reuses the user's existing entities with those names (ignoring case) and creates the missing ones.</summary>
