@@ -27,6 +27,9 @@ public sealed class AppDbContext(
     {
         base.OnModelCreating(modelBuilder);
 
+        // Case-insensitive text type, used for tag and stage names.
+        modelBuilder.HasPostgresExtension("citext");
+
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AppDbContext).Assembly);
     }

@@ -13,6 +13,9 @@ internal sealed class InMemoryProjectRepository : IProjectRepository
     public List<Project> Saved { get; } = [];
     public int SaveChangesCalls { get; private set; }
 
+    /// <summary>When true, the next TrySaveChangesAsync fails as if another request had just saved the same tag.</summary>
+    public bool FailNextSaveWithNameConflict { get; set; }
+
     public Task AddAsync(Project project, CancellationToken ct)
     {
         _pending.Add(project);
@@ -42,6 +45,20 @@ internal sealed class InMemoryProjectRepository : IProjectRepository
         Saved.AddRange(_pending);
         _pending.Clear();
         return Task.CompletedTask;
+    }
+
+    public async Task<bool> TrySaveChangesAsync(CancellationToken ct)
+    {
+        if (FailNextSaveWithNameConflict)
+        {
+            FailNextSaveWithNameConflict = false;
+            SaveChangesCalls++;
+            _pending.Clear();
+            return false;
+        }
+
+        await SaveChangesAsync(ct);
+        return true;
     }
 }
 

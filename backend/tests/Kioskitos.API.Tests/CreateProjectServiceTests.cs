@@ -49,6 +49,25 @@ public sealed class CreateProjectServiceTests
     }
 
     [Fact]
+    public async Task Create_WhenAnotherRequestSavedTheSameNewTag_RetriesOnceReusingIt()
+    {
+        var tags = new InMemoryTagRepository();
+        _projects.FailNextSaveWithNameConflict = true;
+
+        var result = await CreateService(tags: tags).CreateAsync(
+            UserId, Command(tags: ["Web"]), CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        var saved = Assert.Single(_projects.Saved);
+        Assert.Equal(2, _projects.SaveChangesCalls);
+        Assert.Equal(saved.Id, result.Project!.Id);
+
+        // The second attempt found "Web" and reused it instead of adding it again.
+        var tag = Assert.Single(tags.Added);
+        Assert.Equal([tag.Id], saved.Tags.Select(pt => pt.TagId));
+    }
+
+    [Fact]
     public async Task Create_WithoutStages_CreatesGenericStage()
     {
         await CreateService().CreateAsync(UserId, Command(hasStages: false), CancellationToken.None);

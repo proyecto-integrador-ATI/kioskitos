@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Kioskitos.Application.Projects;
+using Kioskitos.Application.Tags;
 using Kioskitos.Domain.Entities;
 using Kioskitos.Infrastructure.Auth;
 using Kioskitos.Infrastructure.Persistence;
@@ -170,6 +172,43 @@ public sealed class ProjectsDatabaseTests(KioskitosWebApplicationFactory factory
             using var cleanupScope = factory.Services.CreateScope();
             await cleanupScope.ServiceProvider.GetRequiredService<AppDbContext>()
                 .Users.Where(u => u.Id == user.Id || u.Id == otherUser.Id).ExecuteDeleteAsync();
+        }
+    }
+
+    [RequiresDatabaseFact]
+    public async Task TrySaveChanges_ReturnsFalse_WhenTheSameTagNameAlreadyExistsIgnoringCase()
+    {
+        var user = new User($"sub-{Guid.NewGuid()}", "projects-conflict@example.com", "Conflict User");
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Users.Add(user);
+            db.Tags.Add(new Tag(user.Id, "Web"));
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            // Simulates a request that did not find "WEB" and tries to insert it
+            // after another request already saved "Web".
+            using var scope = factory.Services.CreateScope();
+            var tags = scope.ServiceProvider.GetRequiredService<ITagRepository>();
+            var projects = scope.ServiceProvider.GetRequiredService<IProjectRepository>();
+
+            await tags.AddAsync(new Tag(user.Id, "WEB"), CancellationToken.None);
+
+            Assert.False(await projects.TrySaveChangesAsync(CancellationToken.None));
+
+            // The lookup by name ignores case too.
+            var found = await tags.FindByNamesAsync(user.Id, ["wEb"], CancellationToken.None);
+            Assert.Equal("Web", Assert.Single(found).Name);
+        }
+        finally
+        {
+            using var cleanupScope = factory.Services.CreateScope();
+            await cleanupScope.ServiceProvider.GetRequiredService<AppDbContext>()
+                .Users.Where(u => u.Id == user.Id).ExecuteDeleteAsync();
         }
     }
 

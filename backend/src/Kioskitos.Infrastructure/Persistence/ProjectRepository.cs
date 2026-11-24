@@ -1,6 +1,7 @@
 using Kioskitos.Application.Projects;
 using Kioskitos.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Kioskitos.Infrastructure.Persistence;
 
@@ -35,6 +36,24 @@ public sealed class ProjectRepository(AppDbContext db) : IProjectRepository
 
     public Task SaveChangesAsync(CancellationToken ct) =>
         db.SaveChangesAsync(ct);
+
+    public async Task<bool> TrySaveChangesAsync(CancellationToken ct)
+    {
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            return true;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+                                           {
+                                               SqlState: PostgresErrorCodes.UniqueViolation
+                                           })
+        {
+            // Forget the failed changes so the caller can start over cleanly.
+            db.ChangeTracker.Clear();
+            return false;
+        }
+    }
 
     // Read-only queries: no tracking needed.
     private IQueryable<Project> WithTags() => db.Projects
