@@ -81,11 +81,11 @@ describe("ClientPage", () => {
     expect(data.getAllByText("—")).toHaveLength(2);
   });
 
-  it("shows the edit button disabled until editing exists", async () => {
+  it("links to the edit page", async () => {
     mockApi(CLIENT);
     render(<ClientPage />);
 
-    expect(await screen.findByRole("button", { name: "Editar" })).toBeDisabled();
+    expect(await screen.findByRole("link", { name: "Editar" })).toHaveAttribute("href", "/clients/c1/edit");
   });
 
   it("shows the client's projects and a link to create one", async () => {

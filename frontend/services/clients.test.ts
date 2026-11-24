@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getClient, listClients } from "./clients";
+import { getClient, listClients, updateClient } from "./clients";
 
 const apiFetch = vi.fn();
 
@@ -31,6 +31,19 @@ describe("clients service", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/clients/abc", {
       headers: { Authorization: "Bearer jwt" },
+    });
+  });
+
+  it("updates a client with PUT and the bearer token", async () => {
+    apiFetch.mockResolvedValueOnce({});
+    const data = { name: "Acme", industry: null, notes: null, contacts: [] };
+
+    await updateClient("abc", data);
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/clients/abc", {
+      method: "PUT",
+      headers: { Authorization: "Bearer jwt" },
+      body: JSON.stringify(data),
     });
   });
 });

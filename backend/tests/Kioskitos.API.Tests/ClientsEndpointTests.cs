@@ -24,7 +24,14 @@ public sealed class ClientsEndpointTests(KioskitosWebApplicationFactory factory)
     {
         { "POST", "/api/clients" },
         { "GET", "/api/clients" },
-        { "GET", $"/api/clients/{Guid.NewGuid()}" }
+        { "GET", $"/api/clients/{Guid.NewGuid()}" },
+        { "PUT", $"/api/clients/{Guid.NewGuid()}" }
+    };
+
+    private static object ValidBody(string name) => new
+    {
+        name,
+        contacts = new[] { new { name = "Luis", email = "luis@estudiosur.com", phone = "098765432" } }
     };
 
     [Theory]
@@ -33,13 +40,7 @@ public sealed class ClientsEndpointTests(KioskitosWebApplicationFactory factory)
     {
         var request = new HttpRequestMessage(new HttpMethod(method), route)
         {
-            Content = method == "POST"
-                ? JsonContent.Create(new
-                {
-                    name = "Estudio Sur",
-                    contacts = new[] { new { name = "Ana", email = "ana@estudiosur.com", phone = "099123456" } }
-                })
-                : null
+            Content = method is "POST" or "PUT" ? JsonContent.Create(ValidBody("Estudio Sur")) : null
         };
 
         var response = await factory.CreateClient().SendAsync(request);
@@ -140,6 +141,50 @@ public sealed class ClientsEndpointTests(KioskitosWebApplicationFactory factory)
         var response = await CreateClient(_user).GetAsync($"/api/clients/{Guid.NewGuid()}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_ReturnsOkWithUpdatedClient()
+    {
+        var client = await SeedAsync(_user.Id, "Acme", industry: "Diseño");
+
+        var response = await CreateClient(_user).PutAsJsonAsync($"/api/clients/{client.Id}", ValidBody("Acme SRL"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("Acme SRL", json.GetProperty("name").GetString());
+        Assert.Equal(JsonValueKind.Null, json.GetProperty("industry").ValueKind);
+        Assert.Equal("Luis", Assert.Single(json.GetProperty("contacts").EnumerateArray())
+            .GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task Update_OfAnotherUser_ReturnsNotFound()
+    {
+        var foreign = await SeedAsync(_otherUser.Id, "Foreign");
+
+        var response = await CreateClient(_user).PutAsJsonAsync($"/api/clients/{foreign.Id}", ValidBody("Mine"));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("client_not_found", problem!.Extensions["errorCode"]?.ToString());
+        Assert.Equal("Foreign", foreign.Name);
+    }
+
+    [Fact]
+    public async Task Update_WithInvalidPhone_ReturnsBadRequest()
+    {
+        var client = await SeedAsync(_user.Id, "Acme");
+
+        var response = await CreateClient(_user).PutAsJsonAsync($"/api/clients/{client.Id}", new
+        {
+            name = "Acme",
+            contacts = new[] { new { name = "Ana", email = "ana@acme.com", phone = "ss" } }
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("invalid_data", problem!.Extensions["errorCode"]?.ToString());
     }
 
     private async Task<Client> SeedAsync(

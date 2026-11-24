@@ -22,6 +22,9 @@ internal sealed class InMemoryClientRepository : IClientRepository
     public Task<Client?> GetByIdAsync(Guid userId, Guid clientId, CancellationToken ct) =>
         Task.FromResult(Saved.FirstOrDefault(c => c.Id == clientId && c.UserId == userId));
 
+    public Task<Client?> FindForUpdateAsync(Guid userId, Guid clientId, CancellationToken ct) =>
+        GetByIdAsync(userId, clientId, ct);
+
     public Task SaveChangesAsync(CancellationToken ct)
     {
         SaveChangesCalled = true;
