@@ -74,7 +74,7 @@ CI ([.github/workflows/cicd.yaml](.github/workflows/cicd.yaml)) runs on PRs to `
 
 **Read `frontend/AGENTS.md` first.** Next 16.4 has breaking changes vs. training data, so check `frontend/node_modules/next/dist/docs/` before using Next APIs.
 
-- `app/`: routes (`login`, `home`, `profile`, `calendar`, `clients/new`, `clients/[clientId]/projects`, `clients/[clientId]/projects/new`, `projects/[id]`). `/` redirects to `/login`. Pages are `"use client"` and gate on `getToken()`, calling `router.replace("/login")` when the token is missing.
+- `app/`: routes (`login`, `home`, `profile`, `calendar`, `clients`, `clients/new`, `clients/[clientId]` (detail + its projects), `clients/[clientId]/projects`, `clients/[clientId]/projects/new`, `projects/[id]`). `/` redirects to `/login`. Pages are `"use client"` and gate on `getToken()`, calling `router.replace("/login")` when the token is missing.
 - `components/`: `AppHeader`, `Button`, `TagSelector`, `StageSelector`, `ClientProjectsList`. Tests sit next to the files they cover (`*.test.tsx`).
 - `services/`: `api.ts` `apiFetch<T>()` prefixes `NEXT_PUBLIC_API_URL` and throws `ApiError(status, problem)` on non-2xx. `auth.ts` stores the JWT in `localStorage` under `kioskitos_token`. Feature services (`clients.ts`, `projects.ts`, `users.ts`) add the `Authorization: Bearer` header and define the TS types that mirror the backend DTOs. Spanish labels for enums live here (`STATUS_LABELS`).
 - Forms: `react-hook-form` + `zod` (`zodResolver`) with Spanish validation messages. The 400/401/other `ApiError` statuses map to friendly Spanish messages.

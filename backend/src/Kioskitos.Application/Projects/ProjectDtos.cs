@@ -28,6 +28,17 @@ public sealed record ProjectSummaryDto(
     DateOnly? DueDate,
     IReadOnlyList<TagDto> Tags);
 
+/// <summary>Project row of the cross-client list; carries the client so the UI can tell projects apart.</summary>
+public sealed record ProjectListItemDto(
+    Guid Id,
+    Guid ClientId,
+    string ClientName,
+    string Name,
+    ProjectStatus Status,
+    DateTime CreatedAt,
+    DateOnly? DueDate,
+    IReadOnlyList<TagDto> Tags);
+
 internal static class ProjectMappings
 {
     public static ProjectDto ToDto(this Project project) => new(
