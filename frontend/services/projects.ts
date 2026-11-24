@@ -41,6 +41,9 @@ export type Project = {
 
 export type ProjectSummary = Pick<Project, "id" | "name" | "status" | "createdAt" | "dueDate" | "tags">;
 
+/** Row of the list of all projects; carries the client because it mixes several. */
+export type ProjectListItem = ProjectSummary & { clientId: string; clientName: string };
+
 export type CreateProjectInput = {
   clientId: string;
   name: string;
@@ -65,6 +68,9 @@ export const createProject = (input: CreateProjectInput) =>
 
 export const getProject = (id: string) =>
   apiFetch<Project>(`/api/projects/${id}`, { headers: authHeaders() });
+
+export const listProjects = () =>
+  apiFetch<ProjectListItem[]>("/api/projects", { headers: authHeaders() });
 
 export const listClientProjects = (clientId: string) =>
   apiFetch<ProjectSummary[]>(`/api/clients/${clientId}/projects`, { headers: authHeaders() });
