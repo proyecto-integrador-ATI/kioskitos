@@ -16,6 +16,12 @@ public interface IClientRepository
     /// <summary>Returns the tracked client with its contacts, only if it belongs to the user.</summary>
     Task<Client?> FindForUpdateAsync(Guid userId, Guid clientId, CancellationToken ct);
 
+    /// <summary>Whether the client has at least one project.</summary>
+    Task<bool> HasProjectsAsync(Guid clientId, CancellationToken ct);
+
+    /// <summary>Marks the client and its contacts for deletion in the unit of work.</summary>
+    void Remove(Client client);
+
     /// <summary>Saves every pending change of the unit of work.</summary>
     Task SaveChangesAsync(CancellationToken ct);
 }

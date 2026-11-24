@@ -137,6 +137,57 @@ public sealed class ClientsDatabaseTests(KioskitosWebApplicationFactory factory)
     }
 
     [RequiresDatabaseFact]
+    public async Task Delete_RemovesClientWithContactsAndKeepsClientsWithProjects()
+    {
+        var user = new User($"sub-{Guid.NewGuid()}", "clients-delete@example.com", "Db User");
+        var client = new Client(user.Id, "Estudio Sur", null, null);
+        client.AddContact("Ana", "ana@estudiosur.com", "099123456");
+        client.AddContact("Luis", "luis@estudiosur.com", "098765432");
+        var clientWithProject = new Client(user.Id, "Acme", null, null);
+        clientWithProject.AddContact("Bob", "bob@acme.com", "099654321");
+        var project = new Project(user.Id, clientWithProject.Id, "Website", null, null, null, false, null);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Users.Add(user);
+            db.Clients.AddRange(client, clientWithProject);
+            db.Projects.Add(project);
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            using (var scope = factory.Services.CreateScope())
+            {
+                var service = new DeleteClientService(
+                    new ClientRepository(scope.ServiceProvider.GetRequiredService<AppDbContext>()));
+
+                Assert.True((await service.DeleteAsync(user.Id, client.Id, CancellationToken.None)).Succeeded);
+                Assert.Equal(
+                    DeleteClientError.HasProjects,
+                    (await service.DeleteAsync(user.Id, clientWithProject.Id, CancellationToken.None)).Error);
+            }
+
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                Assert.False(await db.Clients.AnyAsync(c => c.Id == client.Id));
+                Assert.False(await db.ClientContacts.AnyAsync(cc => cc.ClientId == client.Id));
+                Assert.True(await db.Clients.AnyAsync(c => c.Id == clientWithProject.Id));
+                Assert.True(await db.Projects.AnyAsync(p => p.Id == project.Id));
+            }
+        }
+        finally
+        {
+            using var cleanupScope = factory.Services.CreateScope();
+            await cleanupScope.ServiceProvider.GetRequiredService<AppDbContext>()
+                .Users.Where(u => u.Id == user.Id).ExecuteDeleteAsync();
+        }
+    }
+
+    [RequiresDatabaseFact]
     public async Task ListByUser_WithoutClients_ReturnsEmptyList()
     {
         using var scope = factory.Services.CreateScope();

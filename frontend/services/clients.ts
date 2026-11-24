@@ -49,3 +49,9 @@ export const listClients = () =>
 
 export const getClient = (id: string) =>
   apiFetch<Client>(`/api/clients/${encodeURIComponent(id)}`, { headers: authHeaders() });
+
+export const deleteClient = (id: string) =>
+  apiFetch<void>(`/api/clients/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });

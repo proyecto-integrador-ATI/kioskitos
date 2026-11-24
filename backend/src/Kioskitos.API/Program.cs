@@ -29,6 +29,7 @@ builder.Services.AddScoped<ConnectGoogleCalendarService>();
 builder.Services.AddScoped<RegisterClientService>();
 builder.Services.AddScoped<ClientQueryService>();
 builder.Services.AddScoped<UpdateClientService>();
+builder.Services.AddScoped<DeleteClientService>();
 builder.Services.AddScoped<CreateProjectService>();
 builder.Services.AddScoped<ProjectQueryService>();
 builder.Services.AddScoped<TagService>();

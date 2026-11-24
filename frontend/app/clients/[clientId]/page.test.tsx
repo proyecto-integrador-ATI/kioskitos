@@ -88,6 +88,15 @@ describe("ClientPage", () => {
     expect(await screen.findByRole("link", { name: "Editar" })).toHaveAttribute("href", "/clients/c1/edit");
   });
 
+  it("offers to delete the client", async () => {
+    mockApi(CLIENT);
+    render(<ClientPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Eliminar" }));
+
+    expect(screen.getByRole("dialog", { name: "¿Eliminar a Estudio Sur?" })).toBeInTheDocument();
+  });
+
   it("shows the client's projects and a link to create one", async () => {
     mockApi(CLIENT, [
       { id: "pr1", name: "Website", status: "InProgress", createdAt: "", dueDate: null, tags: [] },

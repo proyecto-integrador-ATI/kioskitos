@@ -11,7 +11,8 @@ namespace Kioskitos.API.Controllers;
 public sealed class ClientsController(
     RegisterClientService registerService,
     ClientQueryService queryService,
-    UpdateClientService updateService) : ControllerBase
+    UpdateClientService updateService,
+    DeleteClientService deleteService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ClientSummaryDto>>> List(CancellationToken ct)
@@ -92,6 +93,32 @@ public sealed class ClientsController(
                 "client_not_found",
                 "The client does not exist.")),
             _ => BadRequest(InvalidDataProblem("Could not update the client"))
+        };
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await deleteService.DeleteAsync(userId, id, ct);
+
+        return result.Error switch
+        {
+            null => NoContent(),
+            DeleteClientError.NotFound => NotFound(ClientProblem(
+                StatusCodes.Status404NotFound,
+                "Could not delete the client",
+                "client_not_found",
+                "The client does not exist.")),
+            _ => Conflict(ClientProblem(
+                StatusCodes.Status409Conflict,
+                "Could not delete the client",
+                "client_has_projects",
+                "The client has projects, so it cannot be deleted."))
         };
     }
 
