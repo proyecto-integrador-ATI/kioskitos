@@ -22,6 +22,11 @@ public sealed class ClientRepository(AppDbContext db) : IClientRepository
             .Include(c => c.Contacts)
             .FirstOrDefaultAsync(c => c.Id == clientId && c.UserId == userId, ct);
 
+    public Task<Client?> FindForUpdateAsync(Guid userId, Guid clientId, CancellationToken ct) =>
+        db.Clients
+            .Include(c => c.Contacts)
+            .FirstOrDefaultAsync(c => c.Id == clientId && c.UserId == userId, ct);
+
     public Task SaveChangesAsync(CancellationToken ct) =>
         db.SaveChangesAsync(ct);
 }

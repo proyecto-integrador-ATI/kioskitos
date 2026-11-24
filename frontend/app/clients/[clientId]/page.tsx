@@ -97,15 +97,12 @@ function ClientInfo({ client }: { client: Client }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-header2 text-green">{client.name}</h1>
-        {/* Enabled once client editing exists. */}
-        <button
-          type="button"
-          disabled
-          title="Próximamente"
-          className="rounded-full border border-green px-4 py-2 text-small font-medium text-green disabled:opacity-50"
+        <Link
+          href={`/clients/${client.id}/edit`}
+          className="rounded-full border border-green px-4 py-2 text-small font-medium text-green hover:bg-white"
         >
           Editar
-        </button>
+        </Link>
       </div>
 
       <section className="rounded-[20px] border border-green bg-cream p-6 text-green">

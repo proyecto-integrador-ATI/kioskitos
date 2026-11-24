@@ -48,6 +48,34 @@ public sealed class Client
         return contact;
     }
 
+    public void Update(string name, string? industry, string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("The client name is required.", nameof(name));
+        }
+
+        Name = name.Trim();
+        Industry = Normalize(industry);
+        Notes = Normalize(notes);
+    }
+
+    public void ReplaceContacts(IEnumerable<(string Name, string Email, string Phone)> contacts)
+    {
+        // Built before clearing, so an invalid contact leaves the current ones untouched.
+        var replacement = contacts
+            .Select((c, i) => new ClientContact(Id, c.Name, c.Email, c.Phone, i))
+            .ToList();
+
+        if (replacement.Count == 0)
+        {
+            throw new InvalidOperationException("A client needs at least one contact.");
+        }
+
+        _contacts.Clear();
+        _contacts.AddRange(replacement);
+    }
+
     private static string? Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

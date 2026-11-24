@@ -93,6 +93,62 @@ public sealed class ClientTests
         Assert.Empty(client.Contacts);
     }
 
+    [Fact]
+    public void Update_TrimsValuesAndStoresBlankOptionalFieldsAsNull()
+    {
+        var client = new Client(UserId, "Estudio Sur", "Diseño", "Notas");
+
+        client.Update("  Estudio Norte ", "  ", "");
+
+        Assert.Equal("Estudio Norte", client.Name);
+        Assert.Null(client.Industry);
+        Assert.Null(client.Notes);
+    }
+
+    [Fact]
+    public void Update_WithoutName_Throws()
+    {
+        var client = new Client(UserId, "Estudio Sur", null, null);
+
+        Assert.Throws<ArgumentException>(() => client.Update(" ", null, null));
+        Assert.Equal("Estudio Sur", client.Name);
+    }
+
+    [Fact]
+    public void ReplaceContacts_ReplacesContactsAndRenumbersPositions()
+    {
+        var client = new Client(UserId, "Estudio Sur", null, null);
+        client.AddContact("Ana", "ana@estudiosur.com", "099123456");
+
+        client.ReplaceContacts([
+            ("Luis", "luis@estudiosur.com", "098765432"),
+            ("Marta", "marta@estudiosur.com", "097111222")
+        ]);
+
+        Assert.Equal(["Luis", "Marta"], client.Contacts.Select(c => c.Name));
+        Assert.Equal([0, 1], client.Contacts.Select(c => c.Position));
+    }
+
+    [Fact]
+    public void ReplaceContacts_WithInvalidContact_KeepsCurrentContacts()
+    {
+        var client = new Client(UserId, "Estudio Sur", null, null);
+        client.AddContact("Ana", "ana@estudiosur.com", "099123456");
+
+        Assert.Throws<ArgumentException>(() => client.ReplaceContacts([("Luis", "luis@estudiosur.com", "ss")]));
+        Assert.Equal("Ana", Assert.Single(client.Contacts).Name);
+    }
+
+    [Fact]
+    public void ReplaceContacts_WithoutContacts_Throws()
+    {
+        var client = new Client(UserId, "Estudio Sur", null, null);
+        client.AddContact("Ana", "ana@estudiosur.com", "099123456");
+
+        Assert.Throws<InvalidOperationException>(() => client.ReplaceContacts([]));
+        Assert.Single(client.Contacts);
+    }
+
     [Theory]
     [InlineData("12345678")]
     [InlineData("099 123 456")]

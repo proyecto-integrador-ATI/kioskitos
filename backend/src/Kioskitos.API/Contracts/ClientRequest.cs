@@ -3,7 +3,8 @@ using Kioskitos.Domain.Entities;
 
 namespace Kioskitos.API.Contracts;
 
-public sealed record RegisterClientRequest(
+/// <summary>Body to register or update a client.</summary>
+public sealed record ClientRequest(
     [Required, MaxLength(Client.NameMaxLength)] string Name,
     [MaxLength(Client.IndustryMaxLength)] string? Industry,
     [MaxLength(Client.NotesMaxLength)] string? Notes,

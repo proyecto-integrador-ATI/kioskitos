@@ -10,7 +10,8 @@ namespace Kioskitos.API.Controllers;
 [Route("api/clients")]
 public sealed class ClientsController(
     RegisterClientService registerService,
-    ClientQueryService queryService) : ControllerBase
+    ClientQueryService queryService,
+    UpdateClientService updateService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ClientSummaryDto>>> List(CancellationToken ct)
@@ -48,7 +49,7 @@ public sealed class ClientsController(
 
     [HttpPost]
     public async Task<ActionResult<ClientDto>> Register(
-        RegisterClientRequest request, CancellationToken ct)
+        ClientRequest request, CancellationToken ct)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -56,26 +57,52 @@ public sealed class ClientsController(
         }
 
         var command = new RegisterClientCommand(
-            request.Name,
-            request.Industry,
-            request.Notes,
-            request.Contacts
-                .Select(c => new ClientContactData(c.Name, c.Email, c.Phone))
-                .ToList());
+            request.Name, request.Industry, request.Notes, ToContactData(request));
 
         var result = await registerService.RegisterAsync(userId, command, ct);
 
         if (!result.Succeeded)
         {
-            return BadRequest(ClientProblem(
-                StatusCodes.Status400BadRequest,
-                "Could not register the client",
-                "invalid_data",
-                "The client name and at least one complete contact person with a valid phone are required."));
+            return BadRequest(InvalidDataProblem("Could not register the client"));
         }
 
         return CreatedAtAction(nameof(GetById), new { id = result.Client!.Id }, result.Client);
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<ClientDto>> Update(
+        Guid id, ClientRequest request, CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var command = new UpdateClientCommand(
+            request.Name, request.Industry, request.Notes, ToContactData(request));
+
+        var result = await updateService.UpdateAsync(userId, id, command, ct);
+
+        return result.Error switch
+        {
+            null => Ok(result.Client),
+            UpdateClientError.NotFound => NotFound(ClientProblem(
+                StatusCodes.Status404NotFound,
+                "Could not update the client",
+                "client_not_found",
+                "The client does not exist.")),
+            _ => BadRequest(InvalidDataProblem("Could not update the client"))
+        };
+    }
+
+    private static List<ClientContactData> ToContactData(ClientRequest request) =>
+        request.Contacts.Select(c => new ClientContactData(c.Name, c.Email, c.Phone)).ToList();
+
+    private ProblemDetails InvalidDataProblem(string title) => ClientProblem(
+        StatusCodes.Status400BadRequest,
+        title,
+        "invalid_data",
+        "The client name and at least one complete contact person with a valid phone are required.");
 
     private ProblemDetails ClientProblem(int status, string title, string errorCode, string detail)
     {

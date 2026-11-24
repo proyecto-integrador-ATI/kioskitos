@@ -13,6 +13,9 @@ public interface IClientRepository
     /// <summary>Returns the client with its contacts, only if it belongs to the user.</summary>
     Task<Client?> GetByIdAsync(Guid userId, Guid clientId, CancellationToken ct);
 
+    /// <summary>Returns the tracked client with its contacts, only if it belongs to the user.</summary>
+    Task<Client?> FindForUpdateAsync(Guid userId, Guid clientId, CancellationToken ct);
+
     /// <summary>Saves every pending change of the unit of work.</summary>
     Task SaveChangesAsync(CancellationToken ct);
 }

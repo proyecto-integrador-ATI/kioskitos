@@ -28,13 +28,7 @@ public sealed class RegisterClientService(IClientRepository clients)
     public async Task<RegisterClientResult> RegisterAsync(
         Guid userId, RegisterClientCommand command, CancellationToken ct)
     {
-        // Client name and at least one complete contact person are required.
-        if (string.IsNullOrWhiteSpace(command.Name)
-            || command.Contacts.Count == 0
-            || command.Contacts.Any(c =>
-                string.IsNullOrWhiteSpace(c.Name)
-                || string.IsNullOrWhiteSpace(c.Email)
-                || !ClientContact.IsValidPhone(c.Phone)))
+        if (!ClientValidation.IsValid(command.Name, command.Contacts))
         {
             return RegisterClientResult.Failure(RegisterClientError.InvalidData);
         }

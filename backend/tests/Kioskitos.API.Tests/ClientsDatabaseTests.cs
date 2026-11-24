@@ -83,6 +83,60 @@ public sealed class ClientsDatabaseTests(KioskitosWebApplicationFactory factory)
     }
 
     [RequiresDatabaseFact]
+    public async Task Update_PersistsDataAndReplacesContacts()
+    {
+        var user = new User($"sub-{Guid.NewGuid()}", "clients-update@example.com", "Db User");
+        var client = new Client(user.Id, "Estudio Sur", "Diseño", null);
+        client.AddContact("Ana", "ana@estudiosur.com", "099123456");
+        client.AddContact("Luis", "luis@estudiosur.com", "098765432");
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Users.Add(user);
+            db.Clients.Add(client);
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            using (var scope = factory.Services.CreateScope())
+            {
+                var service = new UpdateClientService(
+                    new ClientRepository(scope.ServiceProvider.GetRequiredService<AppDbContext>()));
+                var command = new UpdateClientCommand("Estudio Norte", null, "Paga a 30 días.",
+                [
+                    new ClientContactData("Marta", "marta@estudionorte.com", "097111222"),
+                    new ClientContactData("Ana", "ana@estudionorte.com", "099123456")
+                ]);
+
+                var result = await service.UpdateAsync(user.Id, client.Id, command, CancellationToken.None);
+                Assert.True(result.Succeeded);
+            }
+
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var saved = await new ClientQueryService(new ClientRepository(db))
+                    .GetByIdAsync(user.Id, client.Id, CancellationToken.None);
+
+                Assert.Equal("Estudio Norte", saved.Client!.Name);
+                Assert.Null(saved.Client.Industry);
+                Assert.Equal("Paga a 30 días.", saved.Client.Notes);
+                Assert.Equal(["Marta", "Ana"], saved.Client.Contacts.Select(c => c.Name));
+                // The previous contacts are deleted, not left orphaned.
+                Assert.Equal(2, await db.ClientContacts.CountAsync(cc => cc.ClientId == client.Id));
+            }
+        }
+        finally
+        {
+            using var cleanupScope = factory.Services.CreateScope();
+            await cleanupScope.ServiceProvider.GetRequiredService<AppDbContext>()
+                .Users.Where(u => u.Id == user.Id).ExecuteDeleteAsync();
+        }
+    }
+
+    [RequiresDatabaseFact]
     public async Task ListByUser_WithoutClients_ReturnsEmptyList()
     {
         using var scope = factory.Services.CreateScope();

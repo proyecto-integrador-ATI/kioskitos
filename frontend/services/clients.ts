@@ -20,7 +20,8 @@ export type ClientSummary = {
   primaryContact: ClientContact | null;
 };
 
-export type RegisterClient = {
+/** Body to register or update a client. */
+export type ClientInput = {
   name: string;
   industry: string | null;
   notes: string | null;
@@ -29,9 +30,16 @@ export type RegisterClient = {
 
 const authHeaders = () => ({ Authorization: `Bearer ${getToken()}` });
 
-export const registerClient = (data: RegisterClient) =>
+export const registerClient = (data: ClientInput) =>
   apiFetch<Client>("/api/clients", {
     method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+
+export const updateClient = (id: string, data: ClientInput) =>
+  apiFetch<Client>(`/api/clients/${encodeURIComponent(id)}`, {
+    method: "PUT",
     headers: authHeaders(),
     body: JSON.stringify(data),
   });
