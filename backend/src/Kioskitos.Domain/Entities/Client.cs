@@ -42,7 +42,8 @@ public sealed class Client
 
     public ClientContact AddContact(string name, string email, string phone)
     {
-        var contact = new ClientContact(Id, name, email, phone);
+        // Guids are random, so Position is what keeps the primary contact stable across queries.
+        var contact = new ClientContact(Id, name, email, phone, _contacts.Count);
         _contacts.Add(contact);
         return contact;
     }

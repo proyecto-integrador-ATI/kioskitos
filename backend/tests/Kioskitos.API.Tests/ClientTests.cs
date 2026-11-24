@@ -55,6 +55,18 @@ public sealed class ClientTests
         Assert.Equal("099123456", contact.Phone);
     }
 
+    [Fact]
+    public void AddContact_AssignsPositionsInInsertionOrder()
+    {
+        var client = new Client(UserId, "Estudio Sur", null, null);
+
+        var first = client.AddContact("Ana", "ana@estudiosur.com", "099123456");
+        var second = client.AddContact("Luis", "luis@estudiosur.com", "098765432");
+
+        Assert.Equal(0, first.Position);
+        Assert.Equal(1, second.Position);
+    }
+
     [Theory]
     [InlineData("", "ana@estudiosur.com", "099123456")]
     [InlineData("Ana", "", "099123456")]

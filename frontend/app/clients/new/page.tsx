@@ -49,7 +49,7 @@ const clientSchema = z.object({
 type FormInput = z.input<typeof clientSchema>;
 type FormOutput = z.output<typeof clientSchema>;
 
-type Result = { kind: "success"; name: string } | { kind: "error"; message: string } | null;
+type Result = { kind: "success"; id: string; name: string } | { kind: "error"; message: string } | null;
 
 const EMPTY_CONTACT = { name: "", email: "", phone: "" };
 const EMPTY_FORM: FormInput = { name: "", industry: "", notes: "", contacts: [EMPTY_CONTACT] };
@@ -74,8 +74,8 @@ export default function NewClientPage() {
       <AppHeader />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-        <Link href="/home" className="text-small text-green hover:underline">
-          ← Volver al inicio
+        <Link href="/clients" className="text-small text-green hover:underline">
+          ← Volver a clientes
         </Link>
         <h1 className="mt-4 text-header2 text-green">Registrar cliente</h1>
         {/* useFieldArray creates random ids, so the form must not be prerendered. */}
@@ -108,7 +108,7 @@ function ClientForm() {
     try {
       const client = await registerClient(data);
       reset(EMPTY_FORM);
-      setResult({ kind: "success", name: client.name });
+      setResult({ kind: "success", id: client.id, name: client.name });
     } catch (err) {
       const message =
         err instanceof ApiError && err.status === 400
@@ -208,7 +208,10 @@ function ClientForm() {
 
       {result?.kind === "success" && (
         <p role="status" className="rounded-[10px] border border-green bg-white p-3 text-normal text-green">
-          Registramos a {result.name}.
+          Registramos a {result.name}.{" "}
+          <Link href={`/clients/${result.id}`} className="font-bold underline">
+            Ver cliente
+          </Link>
         </p>
       )}
       {result?.kind === "error" && (

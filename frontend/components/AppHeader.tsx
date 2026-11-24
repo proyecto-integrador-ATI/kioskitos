@@ -16,6 +16,9 @@ export function AppHeader() {
           <span className="text-header2 text-blue">KIOSKITOS</span>
         </Link>
         <nav className="flex items-center gap-3">
+          <Link href="/clients" className="text-normal text-cream hover:underline">
+            Clientes
+          </Link>
           <Link href="/profile" className="text-normal text-cream hover:underline">
             Mi perfil
           </Link>

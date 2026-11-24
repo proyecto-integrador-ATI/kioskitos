@@ -13,7 +13,7 @@ public sealed class RegisterClientServiceTests
     [Fact]
     public async Task Register_SavesClientWithContactsForTheUser()
     {
-        var repository = new FakeClientRepository();
+        var repository = new InMemoryClientRepository();
         var service = new RegisterClientService(repository);
         var command = new RegisterClientCommand(
             "Estudio Sur", "Diseño", null,
@@ -26,13 +26,13 @@ public sealed class RegisterClientServiceTests
         Assert.Equal(UserId, saved.UserId);
         Assert.Equal("Estudio Sur", saved.Name);
         Assert.Equal(2, saved.Contacts.Count);
-        Assert.True(repository.Saved);
+        Assert.True(repository.SaveChangesCalled);
     }
 
     [Fact]
     public async Task Register_WithoutContacts_ReturnsInvalidDataAndSavesNothing()
     {
-        var repository = new FakeClientRepository();
+        var repository = new InMemoryClientRepository();
         var service = new RegisterClientService(repository);
         var command = new RegisterClientCommand("Estudio Sur", null, null, []);
 
@@ -40,13 +40,13 @@ public sealed class RegisterClientServiceTests
 
         Assert.Equal(RegisterClientError.InvalidData, result.Error);
         Assert.Empty(repository.Added);
-        Assert.False(repository.Saved);
+        Assert.False(repository.SaveChangesCalled);
     }
 
     [Fact]
     public async Task Register_WithBlankName_ReturnsInvalidData()
     {
-        var repository = new FakeClientRepository();
+        var repository = new InMemoryClientRepository();
         var service = new RegisterClientService(repository);
         var command = new RegisterClientCommand("  ", null, null, [Ana]);
 
@@ -59,7 +59,7 @@ public sealed class RegisterClientServiceTests
     [Fact]
     public async Task Register_WithIncompleteContact_ReturnsInvalidData()
     {
-        var repository = new FakeClientRepository();
+        var repository = new InMemoryClientRepository();
         var service = new RegisterClientService(repository);
         var command = new RegisterClientCommand(
             "Estudio Sur", null, null, [new ClientContactData("Ana", "", "099123456")]);
@@ -73,7 +73,7 @@ public sealed class RegisterClientServiceTests
     [Fact]
     public async Task Register_WithInvalidPhone_ReturnsInvalidDataAndSavesNothing()
     {
-        var repository = new FakeClientRepository();
+        var repository = new InMemoryClientRepository();
         var service = new RegisterClientService(repository);
         var command = new RegisterClientCommand(
             "Estudio Sur", null, null, [new ClientContactData("Ana", "ana@estudiosur.com", "ss")]);
@@ -82,24 +82,6 @@ public sealed class RegisterClientServiceTests
 
         Assert.Equal(RegisterClientError.InvalidData, result.Error);
         Assert.Empty(repository.Added);
-        Assert.False(repository.Saved);
-    }
-
-    private sealed class FakeClientRepository : IClientRepository
-    {
-        public List<Client> Added { get; } = [];
-        public bool Saved { get; private set; }
-
-        public Task AddAsync(Client client, CancellationToken ct)
-        {
-            Added.Add(client);
-            return Task.CompletedTask;
-        }
-
-        public Task SaveChangesAsync(CancellationToken ct)
-        {
-            Saved = true;
-            return Task.CompletedTask;
-        }
+        Assert.False(repository.SaveChangesCalled);
     }
 }

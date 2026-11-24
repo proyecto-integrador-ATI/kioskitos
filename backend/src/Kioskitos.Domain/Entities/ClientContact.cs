@@ -16,10 +16,13 @@ public sealed partial class ClientContact
     public string Email { get; private set; } = null!;
     public string Phone { get; private set; } = null!;
 
+    /// <summary>Order in which the contact was added. Position 0 is the primary contact.</summary>
+    public int Position { get; private set; }
+
     private ClientContact() { } // EF Core
 
     // Internal: contacts are only created through Client.AddContact.
-    internal ClientContact(Guid clientId, string name, string email, string phone)
+    internal ClientContact(Guid clientId, string name, string email, string phone, int position)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -46,6 +49,7 @@ public sealed partial class ClientContact
         Name = name.Trim();
         Email = email.Trim();
         Phone = phone.Trim();
+        Position = position;
     }
 
     public static bool IsValidPhone(string? phone)

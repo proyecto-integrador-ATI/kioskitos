@@ -8,13 +8,49 @@ namespace Kioskitos.API.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/clients")]
-public sealed class ClientsController(RegisterClientService registerService) : ControllerBase
+public sealed class ClientsController(
+    RegisterClientService registerService,
+    ClientQueryService queryService) : ControllerBase
 {
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<ClientSummaryDto>>> List(CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await queryService.ListAsync(userId, ct));
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ClientDto>> GetById(Guid id, CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await queryService.GetByIdAsync(userId, id, ct);
+
+        if (result.Succeeded)
+        {
+            return Ok(result.Client);
+        }
+
+        // Another user's client is reported as missing, so its existence is not revealed.
+        return NotFound(ClientProblem(
+            StatusCodes.Status404NotFound,
+            "Could not get the client",
+            "client_not_found",
+            "The client does not exist."));
+    }
+
     [HttpPost]
-    public async Task<ActionResult<ClientResponse>> Register(
+    public async Task<ActionResult<ClientDto>> Register(
         RegisterClientRequest request, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirst("sub")?.Value, out var userId))
+        if (!User.TryGetUserId(out var userId))
         {
             return Unauthorized();
         }
@@ -31,19 +67,27 @@ public sealed class ClientsController(RegisterClientService registerService) : C
 
         if (!result.Succeeded)
         {
-            var problem = new ProblemDetails
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Could not register the client",
-                Detail = "The client name and at least one complete contact person with a valid phone are required.",
-                Instance = HttpContext.Request.Path
-            };
-            problem.Extensions["errorCode"] = "invalid_data";
-
-            return BadRequest(problem);
+            return BadRequest(ClientProblem(
+                StatusCodes.Status400BadRequest,
+                "Could not register the client",
+                "invalid_data",
+                "The client name and at least one complete contact person with a valid phone are required."));
         }
 
-        var response = ClientResponse.From(result.Client!);
-        return Created($"/api/clients/{response.Id}", response);
+        return CreatedAtAction(nameof(GetById), new { id = result.Client!.Id }, result.Client);
+    }
+
+    private ProblemDetails ClientProblem(int status, string title, string errorCode, string detail)
+    {
+        var problem = new ProblemDetails
+        {
+            Status = status,
+            Title = title,
+            Detail = detail,
+            Instance = HttpContext.Request.Path
+        };
+        problem.Extensions["errorCode"] = errorCode;
+
+        return problem;
     }
 }
