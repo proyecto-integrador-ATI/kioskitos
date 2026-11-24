@@ -6,8 +6,7 @@ import { ApiError } from "../../../../services/apiError";
 import EditClientPage from "./page";
 
 const replace = vi.fn();
-const push = vi.fn();
-const router = { replace, push }; // stable reference, like Next's real router
+const router = { replace }; // stable reference, like Next's real router
 const apiFetch = vi.fn();
 
 vi.mock("next/navigation", () => ({
@@ -55,8 +54,8 @@ describe("EditClientPage", () => {
     expect(screen.getByRole("link", { name: "← Volver al cliente" })).toHaveAttribute("href", "/clients/c1");
   });
 
-  it("sends the changes with PUT and goes back to the client", async () => {
-    apiFetch.mockResolvedValueOnce(CLIENT).mockResolvedValueOnce(CLIENT);
+  it("sends the changes with PUT and confirms they were saved", async () => {
+    apiFetch.mockResolvedValueOnce(CLIENT).mockResolvedValueOnce({ ...CLIENT, name: "Estudio Norte" });
     render(<EditClientPage />);
 
     const name = await screen.findByLabelText("Nombre *", { selector: "#name" });
@@ -75,7 +74,10 @@ describe("EditClientPage", () => {
       notes: null,
       contacts: [{ name: "Ana", email: "ana@sur.uy", phone: "099 123 456" }],
     });
-    expect(push).toHaveBeenCalledWith("/clients/c1");
+    expect(await screen.findByRole("status")).toHaveTextContent("Guardamos los cambios de Estudio Norte.");
+    expect(screen.getByRole("link", { name: "Ver cliente" })).toHaveAttribute("href", "/clients/c1");
+    // The form keeps the saved values instead of going back to the old ones.
+    expect(name).toHaveValue("Estudio Norte");
   });
 
   it("does not call the API when the data is invalid", async () => {
@@ -99,7 +101,7 @@ describe("EditClientPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos guardar los cambios.");
     expect(name).toHaveValue("Estudio Sur SRL");
-    expect(push).not.toHaveBeenCalled();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("shows not found when the client does not exist or belongs to another user", async () => {

@@ -63,8 +63,10 @@ type Props = {
   submittingLabel: string;
   /** Shown for errors other than 400 and 401. */
   failureMessage: string;
-  /** Saves the client. A returned message resets the form and is shown below it. */
-  onSubmit: (data: ClientFormData) => Promise<ReactNode | void>;
+  /** Saves the client and returns the success message shown below the form. */
+  onSubmit: (data: ClientFormData) => Promise<ReactNode>;
+  /** Clears the form after saving (registration); editing keeps the saved values. */
+  resetOnSuccess?: boolean;
 };
 
 const inputClass =
@@ -72,7 +74,14 @@ const inputClass =
 const labelClass = "text-small font-medium text-green";
 const errorClass = "mt-1 text-small text-red";
 
-export function ClientForm({ defaultValues, submitLabel, submittingLabel, failureMessage, onSubmit }: Props) {
+export function ClientForm({
+  defaultValues,
+  submitLabel,
+  submittingLabel,
+  failureMessage,
+  onSubmit,
+  resetOnSuccess = true,
+}: Props) {
   const [result, setResult] = useState<Result>(null);
 
   const {
@@ -94,10 +103,8 @@ export function ClientForm({ defaultValues, submitLabel, submittingLabel, failur
     setResult(null);
     try {
       const message = await onSubmit(data);
-      if (message) {
-        reset(defaultValues);
-        setResult({ kind: "success", message });
-      }
+      if (resetOnSuccess) reset(defaultValues);
+      setResult({ kind: "success", message });
     } catch (err) {
       const message =
         err instanceof ApiError && err.status === 400

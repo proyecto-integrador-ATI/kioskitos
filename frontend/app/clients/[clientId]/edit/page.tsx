@@ -59,8 +59,15 @@ function EditClient() {
   }
 
   async function save(data: ClientFormData) {
-    await updateClient(clientId, data);
-    router.push(`/clients/${clientId}`);
+    const client = await updateClient(clientId, data);
+    return (
+      <>
+        Guardamos los cambios de {client.name}.{" "}
+        <Link href={`/clients/${clientId}`} className="font-bold underline">
+          Ver cliente
+        </Link>
+      </>
+    );
   }
 
   const view = state.kind !== "loading" && state.clientId === clientId ? state : { kind: "loading" as const };
@@ -106,6 +113,7 @@ function EditClient() {
             submittingLabel="Guardando…"
             failureMessage="No pudimos guardar los cambios. Probá de nuevo."
             onSubmit={save}
+            resetOnSuccess={false}
           />
         )}
       </div>
