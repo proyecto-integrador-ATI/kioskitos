@@ -25,10 +25,21 @@ internal sealed class InMemoryClientRepository : IClientRepository
     public Task<Client?> FindForUpdateAsync(Guid userId, Guid clientId, CancellationToken ct) =>
         GetByIdAsync(userId, clientId, ct);
 
+    /// <summary>Ids of the clients that have projects.</summary>
+    public HashSet<Guid> ClientsWithProjects { get; } = [];
+
+    public Task<bool> HasProjectsAsync(Guid clientId, CancellationToken ct) =>
+        Task.FromResult(ClientsWithProjects.Contains(clientId));
+
+    public List<Client> Removed { get; } = [];
+
+    public void Remove(Client client) => Removed.Add(client);
+
     public Task SaveChangesAsync(CancellationToken ct)
     {
         SaveChangesCalled = true;
         Saved.AddRange(Added.Except(Saved));
+        Saved.RemoveAll(Removed.Contains);
         return Task.CompletedTask;
     }
 }

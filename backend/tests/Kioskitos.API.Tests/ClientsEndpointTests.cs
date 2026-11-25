@@ -25,7 +25,8 @@ public sealed class ClientsEndpointTests(KioskitosWebApplicationFactory factory)
         { "POST", "/api/clients" },
         { "GET", "/api/clients" },
         { "GET", $"/api/clients/{Guid.NewGuid()}" },
-        { "PUT", $"/api/clients/{Guid.NewGuid()}" }
+        { "PUT", $"/api/clients/{Guid.NewGuid()}" },
+        { "DELETE", $"/api/clients/{Guid.NewGuid()}" }
     };
 
     private static object ValidBody(string name) => new
@@ -185,6 +186,52 @@ public sealed class ClientsEndpointTests(KioskitosWebApplicationFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.Equal("invalid_data", problem!.Extensions["errorCode"]?.ToString());
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNoContentAndRemovesClient()
+    {
+        var client = await SeedAsync(_user.Id, "Acme");
+
+        var response = await CreateClient(_user).DeleteAsync($"/api/clients/{client.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Empty(_clients.Saved);
+    }
+
+    [Fact]
+    public async Task Delete_OfAnotherUser_ReturnsNotFoundAndKeepsClient()
+    {
+        var foreign = await SeedAsync(_otherUser.Id, "Foreign");
+
+        var response = await CreateClient(_user).DeleteAsync($"/api/clients/{foreign.Id}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("client_not_found", problem!.Extensions["errorCode"]?.ToString());
+        Assert.Single(_clients.Saved);
+    }
+
+    [Fact]
+    public async Task Delete_Unknown_ReturnsNotFound()
+    {
+        var response = await CreateClient(_user).DeleteAsync($"/api/clients/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_WithProjects_ReturnsConflict()
+    {
+        var client = await SeedAsync(_user.Id, "Acme");
+        _clients.ClientsWithProjects.Add(client.Id);
+
+        var response = await CreateClient(_user).DeleteAsync($"/api/clients/{client.Id}");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("client_has_projects", problem!.Extensions["errorCode"]?.ToString());
+        Assert.Single(_clients.Saved);
     }
 
     private async Task<Client> SeedAsync(

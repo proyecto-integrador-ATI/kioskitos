@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "../../services/apiError";
+import { setNotice } from "../../services/notice";
 import ClientsPage from "./page";
 
 const replace = vi.fn();
@@ -87,5 +88,19 @@ describe("ClientsPage", () => {
 
     expect(await screen.findByRole("link", { name: /Acme/ })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows the notice left by a deletion once, with the refreshed list", async () => {
+    setNotice("Eliminamos a Estudio Sur.");
+    apiFetch.mockResolvedValue([ACME]);
+    const { unmount } = render(<ClientsPage />);
+
+    expect(await screen.findByText("Eliminamos a Estudio Sur.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Acme/ })).toBeInTheDocument();
+
+    unmount();
+    render(<ClientsPage />);
+    await screen.findByRole("link", { name: /Acme/ });
+    expect(screen.queryByText("Eliminamos a Estudio Sur.")).not.toBeInTheDocument();
   });
 });

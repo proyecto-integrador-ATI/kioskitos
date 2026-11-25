@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getClient, listClients, updateClient } from "./clients";
+import { deleteClient, getClient, listClients, updateClient } from "./clients";
 
 const apiFetch = vi.fn();
 
@@ -44,6 +44,17 @@ describe("clients service", () => {
       method: "PUT",
       headers: { Authorization: "Bearer jwt" },
       body: JSON.stringify(data),
+    });
+  });
+
+  it("deletes a client with DELETE and the bearer token", async () => {
+    apiFetch.mockResolvedValueOnce(undefined);
+
+    await deleteClient("abc");
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/clients/abc", {
+      method: "DELETE",
+      headers: { Authorization: "Bearer jwt" },
     });
   });
 });

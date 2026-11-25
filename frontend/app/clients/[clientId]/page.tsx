@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { AppHeader } from "../../../components/AppHeader";
 import { ClientProjectsList } from "../../../components/ClientProjectsList";
+import { DeleteClientButton } from "../../../components/DeleteClientButton";
 import { ApiError } from "../../../services/apiError";
 import { getToken } from "../../../services/auth";
 import { getClient, type Client } from "../../../services/clients";
@@ -97,12 +98,15 @@ function ClientInfo({ client }: { client: Client }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-header2 text-green">{client.name}</h1>
-        <Link
-          href={`/clients/${client.id}/edit`}
-          className="rounded-full border border-green px-4 py-2 text-small font-medium text-green hover:bg-white"
-        >
-          Editar
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href={`/clients/${client.id}/edit`}
+            className="rounded-full border border-green px-4 py-2 text-small font-medium text-green hover:bg-white"
+          >
+            Editar
+          </Link>
+          <DeleteClientButton clientId={client.id} clientName={client.name} />
+        </div>
       </div>
 
       <section className="rounded-[20px] border border-green bg-cream p-6 text-green">

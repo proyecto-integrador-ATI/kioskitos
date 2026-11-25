@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppHeader } from "../../components/AppHeader";
 import { getToken } from "../../services/auth";
 import { listClients, type ClientSummary } from "../../services/clients";
+import { takeNotice } from "../../services/notice";
 
 type State =
   | { kind: "loading" }
@@ -19,9 +20,10 @@ export default function ClientsPage() {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   const [attempt, setAttempt] = useState(0);
+  const [notice, setNoticeMessage] = useState<string | null>(null);
 
   // cacheComponents hides this page instead of unmounting it, and the effect runs again
-  // every time it becomes visible: that refetch is what shows clients registered meanwhile.
+  // every time it becomes visible: that refetch is what shows clients registered or deleted meanwhile.
   // The previous list stays on screen while it reloads.
   useEffect(() => {
     if (!getToken()) {
@@ -30,8 +32,16 @@ export default function ClientsPage() {
     }
     let current = true;
     listClients()
-      .then((clients) => current && setState({ kind: "loaded", clients }))
-      .catch(() => current && setState({ kind: "error" }));
+      .then((clients) => {
+        if (!current) return;
+        setState({ kind: "loaded", clients });
+        setNoticeMessage(takeNotice());
+      })
+      .catch(() => {
+        if (!current) return;
+        setState({ kind: "error" });
+        setNoticeMessage(takeNotice());
+      });
     return () => {
       current = false;
     };
@@ -56,6 +66,12 @@ export default function ClientsPage() {
             Registrar cliente
           </Link>
         </div>
+
+        {notice && (
+          <p role="status" className="mt-6 rounded-[10px] border border-green bg-white p-3 text-normal text-green">
+            {notice}
+          </p>
+        )}
 
         <div className="mt-8">
           {state.kind === "loading" && (
